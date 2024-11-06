@@ -27,4 +27,4 @@ networks:
     driver: bridge
     
 volumes:
-   mis_datos:
+  - mis_datos:/app
