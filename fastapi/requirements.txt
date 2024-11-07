@@ -1,4 +1,5 @@
 pydantic==1.10.4
-fastapi
-pandas
+fastapi==0.95.0  # Especifica la versión exacta de FastAPI
+pandas==1.5.3  # Especifica la versión exacta de Pandas
+uvicorn==0.23.0  # Asegúrate de tener Uvicorn para ejecutar la aplicación
 
