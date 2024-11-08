@@ -1,6 +1,6 @@
+from .database import Base  # Asegúrate de importar Base desde el archivo database.py
 from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, func
 from sqlalchemy.orm import relationship
-from database import Base
 
 # Modelo de Cliente en la base de datos
 class ClienteDB(Base):
