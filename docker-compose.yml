@@ -19,5 +19,10 @@ services:
       - deploy_network
     container_name: streamlit
     volumes:
-      - ./streamlit:/app  # Montar la carpeta local streamlit/ en /app
- # Montar la carpeta streamlit directamente
+      - ./streamlit:/app  
+networks:
+  deploy_network:
+    driver: bridge
+    
+volumes:
+   mis_datos:

@@ -1,17 +1,17 @@
 # Usa una imagen base de Python
-FROM python:3.8-slim
+FROM python:3.11-slim
 
-# Establece el directorio de trabajo
-WORKDIR /app
+RUN mkdir /streamlit
 
 # Copia los requisitos de dependencias
-COPY requirements.txt /app/
+COPY requirements.txt /streamlit
 
+WORKDIR /streamlit
 # Instala las dependencias
 RUN pip install -r requirements.txt
 
 # Copia el contenido de la carpeta local al contenedor
-COPY app.py /app/app.py
+COPY . /streamlit
 
 
 # Expón el puerto en el que Streamlit se ejecuta
