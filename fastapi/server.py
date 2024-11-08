@@ -1,7 +1,7 @@
 # server.py
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi import router  # Importación desde 'fastapi'
+from routes import router  # Importar el router desde routes.py
 
 app = FastAPI()
 
@@ -15,4 +15,4 @@ app.add_middleware(
 )
 
 # Incluir las rutas del sistema de gestión
-app.include_router(router)  # Usar directamente 'router' importado
+app.include_router(router)  # Usar el 'router' importado desde routes.py

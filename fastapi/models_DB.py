@@ -1,6 +1,8 @@
-from .database import Base  # Asegúrate de importar Base desde el archivo database.py
+from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, func
 from sqlalchemy.orm import relationship
+
+Base = declarative_base()  # Se define Base
 
 # Modelo de Cliente en la base de datos
 class ClienteDB(Base):
@@ -61,7 +63,7 @@ class TratamientoDB(Base):
     cita_id = Column(Integer, ForeignKey('citas.id'), nullable=False)
 
     # Relación con Cita
-    cita = relationship("CitaDB", backref="tratamientos")
+    cita = relationship("CitaDB", back_populates="tratamientos")
 
     # Para registrar la fecha de creación del tratamiento
     fecha_creacion = Column(DateTime, default=func.now())
@@ -70,8 +72,8 @@ class TratamientoDB(Base):
 class ProductoDB(Base):
     __tablename__ = 'productos'
 
-    IDPRODUCTO = Column(Integer, primary_key=True, autoincrement=True)
-    codigo = Column(String(50), unique=True)
-    nombre = Column(String(100))
-    cantidad = Column(Integer)
-    precio = Column(Float)
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    codigo = Column(String(50), unique=True, index=True)
+    nombre = Column(String(100), nullable=False)
+    cantidad = Column(Integer, nullable=False)
+    precio = Column(Float, nullable=False)
