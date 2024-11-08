@@ -1,26 +1,17 @@
 from fastapi import FastAPI
-from fastapi.responses import JSONResponse
-from pydantic import BaseModel
-from routes import router  # Asegúrate de que 'routes.py' está en la misma carpeta
+from fastapi.middleware.cors import CORSMiddleware
+from routes import router  # Importación correcta
 
-# Crea una instancia de FastAPI
-app = FastAPI(
-    title="Servidor de datos de la clínica veterinaria",
-    description="Gestión de datos de clientes, mascotas, citas y tratamientos.",
-    version="0.1.0",
+app = FastAPI()
+
+# Permitir el acceso desde cualquier origen
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # O especificar los orígenes permitidos
+    allow_credentials=True,
+    allow_methods=["*"],  # Permitir cualquier método HTTP
+    allow_headers=["*"],  # Permitir cualquier cabecera HTTP
 )
 
-# Definir el modelo para el formulario
-class FormData(BaseModel):
-    date: str
-    description: str
-    option: str
-    amount: float
-
-# Endpoint para recibir un formulario
-@app.post("/envio/")
-async def submit_form(data: FormData):
-    return {"message": "Formulario recibido", "data": data}
-
-# Incluir las rutas de clientes, mascotas, citas y tratamientos
-app.include_router(router)
+# Incluir las rutas del sistema de gestión
+app.include_router(router)  # Usar directamente 'router' importado

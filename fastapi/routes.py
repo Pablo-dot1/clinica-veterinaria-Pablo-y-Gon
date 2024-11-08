@@ -1,7 +1,9 @@
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
 from typing import List
-from . import models, models_db, database
+import models
+import models_db
+import database
 
 router = APIRouter()
 
@@ -14,10 +16,14 @@ def get_db():
         db.close()
 
 # Rutas para Cliente
-
 @router.post("/clientes/", response_model=models.Cliente)
 def crear_cliente(cliente: models.Cliente, db: Session = Depends(get_db)):
-    db_cliente = models_db.ClienteDB(nombre=cliente.nombre, email=cliente.email)
+    db_cliente = models_db.ClienteDB(
+        nombre=cliente.nombre,
+        telefono=cliente.telefono,
+        direccion=cliente.direccion,
+        email=cliente.email
+    )
     db.add(db_cliente)
     db.commit()
     db.refresh(db_cliente)
@@ -35,10 +41,15 @@ def obtener_cliente(cliente_id: int, db: Session = Depends(get_db)):
     return db_cliente
 
 # Rutas para Mascota
-
 @router.post("/mascotas/", response_model=models.Mascota)
 def crear_mascota(mascota: models.Mascota, db: Session = Depends(get_db)):
-    db_mascota = models_db.MascotaDB(nombre=mascota.nombre, especie=mascota.especie, cliente_id=mascota.cliente_id)
+    db_mascota = models_db.MascotaDB(
+        nombre=mascota.nombre,
+        especie=mascota.especie,
+        raza=mascota.raza,
+        edad=mascota.edad,
+        propietario_id=mascota.propietario_id
+    )
     db.add(db_mascota)
     db.commit()
     db.refresh(db_mascota)
@@ -56,10 +67,13 @@ def obtener_mascota(mascota_id: int, db: Session = Depends(get_db)):
     return db_mascota
 
 # Rutas para Cita
-
 @router.post("/citas/", response_model=models.Cita)
 def crear_cita(cita: models.Cita, db: Session = Depends(get_db)):
-    db_cita = models_db.CitaDB(fecha=cita.fecha, mascota_id=cita.mascota_id, tratamiento=cita.tratamiento)
+    db_cita = models_db.CitaDB(
+        fecha_hora=cita.fecha_hora,
+        mascota_id=cita.mascota_id,
+        motivo=cita.motivo
+    )
     db.add(db_cita)
     db.commit()
     db.refresh(db_cita)
@@ -77,10 +91,13 @@ def obtener_cita(cita_id: int, db: Session = Depends(get_db)):
     return db_cita
 
 # Rutas para Tratamiento
-
 @router.post("/tratamientos/", response_model=models.Tratamiento)
 def crear_tratamiento(tratamiento: models.Tratamiento, db: Session = Depends(get_db)):
-    db_tratamiento = models_db.TratamientoDB(nombre=tratamiento.nombre, descripcion=tratamiento.descripcion, precio=tratamiento.precio)
+    db_tratamiento = models_db.TratamientoDB(
+        nombre=tratamiento.nombre,
+        descripcion=tratamiento.descripcion,
+        costo=tratamiento.costo
+    )
     db.add(db_tratamiento)
     db.commit()
     db.refresh(db_tratamiento)
@@ -96,3 +113,21 @@ def obtener_tratamiento(tratamiento_id: int, db: Session = Depends(get_db)):
     if db_tratamiento is None:
         raise HTTPException(status_code=404, detail="Tratamiento no encontrado")
     return db_tratamiento
+
+# Rutas para Producto
+@router.post("/productos/", response_model=models.Producto)
+def crear_producto(producto: models.Producto, db: Session = Depends(get_db)):
+    db_producto = models_db.ProductoDB(
+        codigo=producto.codigo,
+        nombre=producto.nombre,
+        cantidad=producto.cantidad,
+        precio=producto.precio
+    )
+    db.add(db_producto)
+    db.commit()
+    db.refresh(db_producto)
+    return db_producto
+
+@router.get("/productos/", response_model=List[models.Producto])
+def obtener_productos(db: Session = Depends(get_db)):
+    return db.query(models_db.ProductoDB).all()

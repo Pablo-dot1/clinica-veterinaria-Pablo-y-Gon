@@ -10,7 +10,7 @@ class ClienteDB(Base):
     nombre = Column(String, index=True)
     telefono = Column(String, index=True)
     direccion = Column(String, nullable=True)
-    email = Column(String, nullable=True, unique=True)  # Email único para cada cliente
+    email = Column(String, nullable=True, unique=True)
 
     # Relación con Mascota
     mascotas = relationship("MascotaDB", back_populates="propietario")
@@ -66,6 +66,7 @@ class TratamientoDB(Base):
     # Para registrar la fecha de creación del tratamiento
     fecha_creacion = Column(DateTime, default=func.now())
 
+# Modelo de Producto en la base de datos
 class ProductoDB(Base):
     __tablename__ = 'productos'
 

@@ -1,5 +1,8 @@
 pydantic==1.10.4
-fastapi==0.95.0  # Especifica la versión exacta de FastAPI
-pandas==1.5.3  # Especifica la versión exacta de Pandas
-uvicorn==0.23.0  # Asegúrate de tener Uvicorn para ejecutar la aplicación
+fastapi==0.95.0
+pandas==1.5.3
+uvicorn==0.23.0
+databases==0.8.0  # Si usas bases de datos asíncronas con SQLAlchemy
+python-dotenv==1.0.0  # Para manejar variables de entorno
+
 

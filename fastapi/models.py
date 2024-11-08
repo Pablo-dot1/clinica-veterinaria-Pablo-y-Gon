@@ -7,19 +7,21 @@ class Cliente(BaseModel):
     nombre: str
     telefono: str = Field(..., regex=r'^\+?[1-9]\d{1,14}$')  # Validación para un teléfono internacional
     direccion: Optional[str] = None
-    # Añadir validación personalizada si es necesario (por ejemplo, si el cliente debe tener al menos una mascota)
-    @root_validator
-    def check_cliente(cls, values):
-        # Implementar validaciones de cliente si es necesario
-        return values
+    email: Optional[str] = None
+
+    class Config:
+        orm_mode = True
 
 class Mascota(BaseModel):
     id: int
     nombre: str
     especie: str
     raza: str
-    edad: int = Field(..., ge=0)  # Edad debe ser mayor o igual a 0
+    edad: int = Field(..., ge=0)
     propietario_id: int
+
+    class Config:
+        orm_mode = True
 
 class Cita(BaseModel):
     id: int
@@ -27,20 +29,23 @@ class Cita(BaseModel):
     mascota_id: int
     motivo: str
 
+    class Config:
+        orm_mode = True
+
 class Tratamiento(BaseModel):
     id: int
     nombre: str
-    descripcion: Optional[str] = None  # Hacer descripción opcional
-    costo: float = Field(..., gt=0)  # Costo debe ser mayor que 0
+    descripcion: Optional[str] = None
+    costo: float = Field(..., gt=0)
 
-    @root_validator
-    def check_tratamiento(cls, values):
-        if values.get('costo') <= 0:
-            raise ValueError('El costo debe ser mayor a 0')
-        return values
+    class Config:
+        orm_mode = True
 
 class Producto(BaseModel):
     codigo: str
     nombre: str
     cantidad: int
     precio: float
+
+    class Config:
+        orm_mode = True
