@@ -7,7 +7,7 @@ services:
       - deploy_network
     container_name: fastapi
     volumes:
-      - mis_datos:/app
+      - ./fastapi:/app
 
   streamlit:
     build: streamlit/
