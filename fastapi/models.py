@@ -109,6 +109,28 @@ class Cita(BaseModel):
     class Config:
         from_attributes = True
 
+class CitaCreate(BaseModel):
+    fecha: datetime
+    motivo: constr(min_length=5, max_length=200)
+    mascota_id: int
+    veterinario_id: int
+    estado: str = Field(pattern='^(pendiente|confirmada|cancelada|completada)$')
+    notas: Optional[str] = None
+    tratamiento_id: Optional[int] = None
+
+    class Config:
+        from_attributes = True
+
+class CitaUpdate(BaseModel):
+    fecha: Optional[datetime] = None
+    motivo: Optional[constr(min_length=5, max_length=200)] = None
+    estado: Optional[str] = Field(None, pattern='^(pendiente|confirmada|cancelada|completada)$')
+    notas: Optional[str] = None
+    tratamiento_id: Optional[int] = None
+
+    class Config:
+        from_attributes = True
+
 class Tratamiento(BaseModel):
     id: Optional[int] = None
     nombre: constr(min_length=2, max_length=100)
