@@ -1,21 +1,41 @@
-# fastapi/database.py
-
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+import os
+import logging
 
-# Crea una base para los modelos
-Base = declarative_base()
+# Configuración de logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-# Configura la URL de la base de datos
-DATABASE_URL = "sqlite:///./test.db"  # Usando SQLite como ejemplo, puedes cambiarla a la base de datos que estés usando
+# Configuración de la base de datos
+SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./sql_app.db")
 
-# Crea el motor de base de datos
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})  # Para SQLite se necesita este argumento
+try:
+    # Crear el motor de la base de datos
+    engine = create_engine(
+        SQLALCHEMY_DATABASE_URL,
+        connect_args={"check_same_thread": False},  # Solo necesario para SQLite
+        pool_pre_ping=True  # Verificar conexión antes de usar
+    )
 
-# Crea una sesión para interactuar con la base de datos
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    # Crear la sesión
+    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# Crea las tablas en la base de datos (si no existen)
-def create_db():
-    Base.metadata.create_all(bind=engine)
+    # Crear la base declarativa
+    Base = declarative_base()
+
+except Exception as e:
+    logger.error(f"Error al configurar la base de datos: {str(e)}")
+    raise
+
+# Dependencia para obtener la sesión de la base de datos
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    except Exception as e:
+        logger.error(f"Error en la sesión de base de datos: {str(e)}")
+        raise
+    finally:
+        db.close()

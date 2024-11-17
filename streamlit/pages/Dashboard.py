@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 
 def get_data(endpoint):
     try:
-        response = requests.get(f"http://localhost:8000/{endpoint}/")
+        response = requests.get(f"http://fastapi:8000/{endpoint}/")
         if response.status_code == 200:
             return response.json()
         else:

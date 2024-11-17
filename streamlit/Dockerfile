@@ -7,12 +7,13 @@ RUN mkdir /streamlit
 COPY requirements.txt /streamlit
 
 WORKDIR /streamlit
-# Instala las dependencias
-RUN pip install -r requirements.txt
+
+# Limpia la caché de pip e instala las dependencias
+RUN pip cache purge && \
+    pip install --no-cache-dir -r requirements.txt
 
 # Copia el contenido de la carpeta local al contenedor
 COPY . /streamlit
-
 
 # Expón el puerto en el que Streamlit se ejecuta
 EXPOSE 8501

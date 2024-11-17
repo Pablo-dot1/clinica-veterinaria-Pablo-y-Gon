@@ -19,6 +19,10 @@ class Cliente(BaseModel):
             raise ValueError('El teléfono debe contener solo números')
         return v
 
+class ClienteCreate(Cliente):
+    class Config:
+        from_attributes = True
+
 class Veterinario(BaseModel):
     id: Optional[int] = None
     nombre: constr(min_length=2, max_length=50)

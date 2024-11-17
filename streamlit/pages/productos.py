@@ -1,7 +1,7 @@
 import streamlit as st
 import requests
 
-API_URL_PRODUCTOS = "http://localhost:8000/productos/"
+API_URL_PRODUCTOS = "http://fastapi:8000/productos/"
 
 # Función para crear un nuevo producto
 def crear_producto():

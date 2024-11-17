@@ -2,7 +2,7 @@ import streamlit as st
 import requests
 from datetime import datetime
 
-API_URL_TRATAMIENTOS = "http://localhost:8000/tratamientos/"
+API_URL_TRATAMIENTOS = "http://fastapi:8000/tratamientos/"
 
 # Función para crear un nuevo tratamiento
 def crear_tratamiento():
