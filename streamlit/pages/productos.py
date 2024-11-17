@@ -12,9 +12,9 @@ def crear_producto():
     stock = st.number_input("Stock", min_value=0, step=1)
 
     if st.button("Crear Producto"):
-        data = {"nombre": nombre, "categoria": categoria, "precio": precio, "stock": stock}
-        response = requests.post(API_URL_PRODUCTOS, json=data)
-        if response.status_code == 201:
+        datos = {"nombre": nombre, "categoria": categoria, "precio": precio, "stock": stock}
+        respuesta = requests.post(API_URL_PRODUCTOS, json=datos)
+        if respuesta.status_code == 201:
             st.success("Producto creado exitosamente")
         else:
             st.error("Error al crear el producto")
@@ -22,9 +22,9 @@ def crear_producto():
 # Función para visualizar productos
 def ver_productos():
     st.header("Inventario de Productos")
-    response = requests.get(API_URL_PRODUCTOS)
-    if response.status_code == 200:
-        productos = response.json()
+    respuesta = requests.get(API_URL_PRODUCTOS)
+    if respuesta.status_code == 200:
+        productos = respuesta.json()
         for producto in productos:
             st.write(f"ID: {producto['id']} | Nombre: {producto['nombre']} | Categoría: {producto['categoria']} | Precio: {producto['precio']} | Stock: {producto['stock']}")
     else:
@@ -33,13 +33,13 @@ def ver_productos():
 # Función para actualizar stock de un producto
 def actualizar_stock():
     st.header("Actualizar Stock")
-    producto_id = st.number_input("ID del Producto", min_value=1)
+    id_producto = st.number_input("ID del Producto", min_value=1)
     nuevo_stock = st.number_input("Nuevo Stock", min_value=0, step=1)
 
     if st.button("Actualizar Stock"):
-        data = {"id": producto_id, "stock": nuevo_stock}
-        response = requests.put(f"{API_URL_PRODUCTOS}/{producto_id}", json=data)
-        if response.status_code == 200:
+        datos = {"id": id_producto, "stock": nuevo_stock}
+        respuesta = requests.put(f"{API_URL_PRODUCTOS}/{id_producto}", json=datos)
+        if respuesta.status_code == 200:
             st.success("Stock actualizado correctamente")
         else:
             st.error("Error al actualizar el stock")
@@ -47,13 +47,13 @@ def actualizar_stock():
 # Función para registrar una venta
 def registrar_venta():
     st.header("Registrar Venta de Producto")
-    producto_id = st.number_input("ID del Producto", min_value=1)
+    id_producto = st.number_input("ID del Producto", min_value=1)
     cantidad = st.number_input("Cantidad", min_value=1, step=1)
 
     if st.button("Registrar Venta"):
-        data = {"producto_id": producto_id, "cantidad": cantidad}
-        response = requests.post(f"{API_URL_PRODUCTOS}/venta", json=data)
-        if response.status_code == 201:
+        datos = {"producto_id": id_producto, "cantidad": cantidad}
+        respuesta = requests.post(f"{API_URL_PRODUCTOS}/venta", json=datos)
+        if respuesta.status_code == 201:
             st.success("Venta registrada exitosamente")
         else:
             st.error("Error al registrar la venta")

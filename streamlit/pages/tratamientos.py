@@ -1,64 +1,138 @@
 import streamlit as st
 import requests
+from datetime import datetime
 
 API_URL_TRATAMIENTOS = "http://localhost:8000/tratamientos/"
 
 # Función para crear un nuevo tratamiento
 def crear_tratamiento():
     st.header("Crear Tratamiento")
-    nombre = st.text_input("Nombre del Tratamiento")
-    descripcion = st.text_area("Descripción del Tratamiento")
-    costo = st.number_input("Costo", min_value=0.0, step=0.1)
+    
+    # Campos del formulario con validación
+    nombre = st.text_input("Nombre del Tratamiento", 
+                          help="Ingrese el nombre del tratamiento (mínimo 2 caracteres)")
+    
+    descripcion = st.text_area("Descripción del Tratamiento",
+                              help="Proporcione una descripción detallada del tratamiento")
+    
+    costo = st.number_input("Costo", 
+                           min_value=0.0, 
+                           step=0.1,
+                           help="Ingrese el costo del tratamiento")
+    
+    duracion = st.number_input("Duración (días)", 
+                              min_value=1,
+                              help="Duración estimada del tratamiento en días")
+    
+    indicaciones = st.text_area("Indicaciones",
+                               help="Indicaciones específicas para el tratamiento")
 
     if st.button("Crear Tratamiento"):
-        data = {"nombre": nombre, "descripcion": descripcion, "costo": costo}
-        response = requests.post(API_URL_TRATAMIENTOS, json=data)
-        if response.status_code == 201:
-            st.success("Tratamiento creado exitosamente")
+        if len(nombre) < 2:
+            st.error("El nombre del tratamiento debe tener al menos 2 caracteres")
+            return
+            
+        datos = {
+            "nombre": nombre,
+            "descripcion": descripcion,
+            "costo": costo,
+            "duracion": duracion,
+            "indicaciones": indicaciones
+        }
+        
+        respuesta = requests.post(API_URL_TRATAMIENTOS, json=datos)
+        if respuesta.status_code == 201:
+            st.success("¡Tratamiento creado exitosamente!")
+            st.balloons()
         else:
-            st.error("Error al crear el tratamiento")
+            st.error(f"Error al crear el tratamiento: {respuesta.text}")
 
 # Función para visualizar los tratamientos
 def ver_tratamientos():
     st.header("Tratamientos Disponibles")
-    response = requests.get(API_URL_TRATAMIENTOS)
-    if response.status_code == 200:
-        tratamientos = response.json()
+    
+    # Añadir filtros
+    filtro_nombre = st.text_input("Filtrar por nombre")
+    
+    respuesta = requests.get(API_URL_TRATAMIENTOS)
+    if respuesta.status_code == 200:
+        tratamientos = respuesta.json()
+        
+        # Aplicar filtro si existe
+        if filtro_nombre:
+            tratamientos = [t for t in tratamientos if filtro_nombre.lower() in t['nombre'].lower()]
+        
+        # Mostrar tratamientos en un formato más organizado
         for tratamiento in tratamientos:
-            st.write(f"ID: {tratamiento['id']} | Nombre: {tratamiento['nombre']} | Costo: {tratamiento['costo']}")
+            with st.expander(f"📋 {tratamiento['nombre']} - ${tratamiento['costo']}"):
+                st.write(f"**Descripción:** {tratamiento['descripcion']}")
+                st.write(f"**Duración:** {tratamiento.get('duracion', 'No especificada')} días")
+                st.write(f"**Indicaciones:** {tratamiento.get('indicaciones', 'No especificadas')}")
+                st.write(f"**ID:** {tratamiento['id']}")
     else:
-        st.error("No se pudieron cargar los tratamientos")
+        st.error("No se pudieron cargar los tratamientos. Por favor, intente más tarde.")
 
 # Función para modificar un tratamiento
 def modificar_tratamiento():
     st.header("Modificar Tratamiento")
+    
     tratamiento_id = st.number_input("ID del Tratamiento", min_value=1)
-    nombre = st.text_input("Nuevo Nombre del Tratamiento")
-    descripcion = st.text_area("Nueva Descripción")
-    costo = st.number_input("Nuevo Costo", min_value=0.0, step=0.1)
+    
+    # Obtener datos actuales del tratamiento
+    respuesta = requests.get(f"{API_URL_TRATAMIENTOS}/{tratamiento_id}")
+    if respuesta.status_code == 200:
+        tratamiento_actual = respuesta.json()
+        
+        nombre = st.text_input("Nuevo Nombre del Tratamiento", value=tratamiento_actual.get('nombre', ''))
+        descripcion = st.text_area("Nueva Descripción", value=tratamiento_actual.get('descripcion', ''))
+        costo = st.number_input("Nuevo Costo", 
+                               value=float(tratamiento_actual.get('costo', 0.0)),
+                               min_value=0.0, 
+                               step=0.1)
+        duracion = st.number_input("Nueva Duración (días)", 
+                                 value=int(tratamiento_actual.get('duracion', 1)),
+                                 min_value=1)
+        indicaciones = st.text_area("Nuevas Indicaciones", 
+                                  value=tratamiento_actual.get('indicaciones', ''))
 
-    if st.button("Modificar Tratamiento"):
-        data = {"nombre": nombre, "descripcion": descripcion, "costo": costo}
-        response = requests.put(f"{API_URL_TRATAMIENTOS}/{tratamiento_id}", json=data)
-        if response.status_code == 200:
-            st.success("Tratamiento modificado correctamente")
-        else:
-            st.error("Error al modificar el tratamiento")
+        if st.button("Modificar Tratamiento"):
+            datos = {
+                "nombre": nombre,
+                "descripcion": descripcion,
+                "costo": costo,
+                "duracion": duracion,
+                "indicaciones": indicaciones
+            }
+            
+            respuesta = requests.put(f"{API_URL_TRATAMIENTOS}/{tratamiento_id}", json=datos)
+            if respuesta.status_code == 200:
+                st.success("¡Tratamiento modificado correctamente!")
+                st.balloons()
+            else:
+                st.error(f"Error al modificar el tratamiento: {respuesta.text}")
+    else:
+        st.error("No se encontró el tratamiento especificado")
 
 # Función para eliminar un tratamiento
 def eliminar_tratamiento():
     st.header("Eliminar Tratamiento")
+    
     tratamiento_id = st.number_input("ID del Tratamiento", min_value=1)
-
+    
     if st.button("Eliminar Tratamiento"):
-        response = requests.delete(f"{API_URL_TRATAMIENTOS}/{tratamiento_id}")
-        if response.status_code == 200:
-            st.success("Tratamiento eliminado correctamente")
-        else:
-            st.error("Error al eliminar el tratamiento")
+        # Confirmación de eliminación
+        if st.checkbox("¿Está seguro de que desea eliminar este tratamiento?"):
+            respuesta = requests.delete(f"{API_URL_TRATAMIENTOS}/{tratamiento_id}")
+            if respuesta.status_code == 200:
+                st.success("Tratamiento eliminado correctamente")
+            else:
+                st.error("Error al eliminar el tratamiento")
 
 # Llamar a las funciones según la opción seleccionada
-opcion = st.selectbox("Selecciona una acción", ["Ver Tratamientos", "Crear Tratamiento", "Modificar Tratamiento", "Eliminar Tratamiento"])
+opcion = st.selectbox(
+    "Selecciona una acción",
+    ["Ver Tratamientos", "Crear Tratamiento", "Modificar Tratamiento", "Eliminar Tratamiento"]
+)
 
 if opcion == "Crear Tratamiento":
     crear_tratamiento()
