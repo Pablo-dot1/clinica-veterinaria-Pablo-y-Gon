@@ -11,12 +11,24 @@ services:
       - mis_datos:/app/data
     environment:
       - DATABASE_URL=sqlite:///./data/sql_app.db
+      - DATABASE_POOL_SIZE=5
+      - DATABASE_POOL_TIMEOUT=30
+      - LOG_LEVEL=INFO
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --workers 1 --log-level info --timeout-keep-alive 75
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
-      timeout: 10s
+      interval: 15s
+      timeout: 5s
       retries: 3
-      start_period: 40s
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
 
   streamlit:
     build: streamlit/
@@ -29,7 +41,21 @@ services:
       - backend_network
     container_name: streamlit
     volumes:
-      - ./streamlit:/app  
+      - ./streamlit:/app
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
 
 networks:
   backend_network:

@@ -1,0 +1,1 @@
+ERROR:database:Error al configurar la base de datos: Invalid argument(s) 'pool_size','pool_timeout' sent to create_engine(), using configuration SQLiteDialect_pysqlite/NullPool/Engine.

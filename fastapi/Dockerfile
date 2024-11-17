@@ -5,8 +5,8 @@ FROM tiangolo/uvicorn-gunicorn-fastapi:python3.9
 WORKDIR /fastapi
 COPY requirements.txt .
 
-# Instala las dependencias
-RUN pip install --no-cache-dir -r requirements.txt
+# Instala las dependencias y psutil directamente
+RUN pip install --no-cache-dir -r requirements.txt && pip install psutil
 
 # Copia el resto de los archivos al contenedor
 COPY . .

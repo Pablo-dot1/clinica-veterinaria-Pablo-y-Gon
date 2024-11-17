@@ -1,4 +1,5 @@
 import streamlit as st
+import os
 
 # Configuración de la página
 st.set_page_config(
@@ -59,9 +60,7 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 # Agregar imagen después del título
-# Opción 1: Usando una URL de internet
 st.image("https://images.pexels.com/photos/45170/kittens-cat-cat-puppy-rush-45170.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1", width=700, caption="Nuestra Clínica")
-
 
 # Menú lateral mejorado
 with st.sidebar:
@@ -81,17 +80,35 @@ with st.sidebar:
         else f"🏷️ {x}"
     )
 
-# Redirigir al archivo correspondiente según la página seleccionada
-if page == "Clientes":
-    import pages.clientes
-elif page == "Citas":
-    import pages.citas
-elif page == "Tratamientos":
-    import pages.tratamientos
-elif page == "Productos":
-    import pages.productos
-else:
-    import pages.Dashboard
+# Manejo seguro de importaciones de páginas
+try:
+    if page == "Clientes":
+        if os.path.exists("pages/clientes.py"):
+            import pages.clientes
+        else:
+            st.error("La página de Clientes está en desarrollo")
+    elif page == "Citas":
+        if os.path.exists("pages/citas.py"):
+            import pages.citas
+        else:
+            st.error("La página de Citas está en desarrollo")
+    elif page == "Tratamientos":
+        if os.path.exists("pages/tratamientos.py"):
+            import pages.tratamientos
+        else:
+            st.error("La página de Tratamientos está en desarrollo")
+    elif page == "Productos":
+        if os.path.exists("pages/productos.py"):
+            import pages.productos
+        else:
+            st.error("La página de Productos está en desarrollo")
+    else:
+        if os.path.exists("pages/Dashboard.py"):
+            import pages.Dashboard
+        else:
+            st.error("El Dashboard está en desarrollo")
+except Exception as e:
+    st.error(f"Error al cargar la página: {str(e)}")
 
 # Footer mejorado
 st.markdown("""

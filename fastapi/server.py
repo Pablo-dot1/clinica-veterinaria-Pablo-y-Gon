@@ -14,5 +14,10 @@ app.add_middleware(
     allow_headers=["*"],  # Permitir cualquier cabecera HTTP
 )
 
+# Ruta de health check
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy"}
+
 # Incluir las rutas del sistema de gestión
 app.include_router(router)  # Usar el 'router' importado desde routes.py

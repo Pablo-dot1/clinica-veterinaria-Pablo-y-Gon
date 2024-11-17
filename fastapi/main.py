@@ -1,11 +1,31 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from routes import router
-from database import engine
+from database import engine, check_database_connection
 import db_models
+import logging
+import sys
+import psutil
+import os
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(sys.stdout)
+    ]
+)
+logger = logging.getLogger(__name__)
 
 # Create database tables
-db_models.Base.metadata.create_all(bind=engine)
+try:
+    db_models.Base.metadata.create_all(bind=engine)
+    logger.info("Database tables created successfully")
+except Exception as e:
+    logger.error(f"Error creating database tables: {str(e)}")
+    raise
 
 app = FastAPI(
     title="Veterinary Clinic API",
@@ -25,24 +45,82 @@ app.add_middleware(
 # Include the router
 app.include_router(router)
 
+@app.on_event("startup")
+async def startup_event():
+    """Verify connections and dependencies at startup"""
+    logger.info("Starting application...")
+    try:
+        check_database_connection()
+        logger.info("Database connection verified")
+    except Exception as e:
+        logger.error(f"Error during application startup: {str(e)}")
+        raise
+
 @app.get("/")
 async def root():
-    return {
-        "message": "Welcome to the Veterinary Clinic API",
-        "docs": "/docs",
-        "redoc": "/redoc"
-    }
+    try:
+        return {
+            "message": "Welcome to the Veterinary Clinic API",
+            "docs": "/docs",
+            "redoc": "/redoc"
+        }
+    except Exception as e:
+        logger.error(f"Error in root endpoint: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 @app.get("/health")
 async def health_check():
-    return {"status": "healthy"}
+    try:
+        # Check database connection
+        check_database_connection()
+        
+        # Get system information
+        cpu_percent = psutil.cpu_percent(interval=1)  # 1 second interval for more accurate reading
+        memory = psutil.virtual_memory()
+        disk = psutil.disk_usage('/')
+        
+        # Get process-specific information
+        process = psutil.Process()
+        process_memory = process.memory_info()
+        
+        return {
+            "status": "healthy",
+            "database": "connected",
+            "system_info": {
+                "cpu_usage": f"{cpu_percent}%",
+                "memory_usage": f"{memory.percent}%",
+                "disk_usage": f"{disk.percent}%",
+                "memory_available": f"{memory.available/1024/1024:.2f} MB",
+                "disk_available": f"{disk.free/1024/1024/1024:.2f} GB",
+                "total_memory": f"{memory.total/1024/1024:.2f} MB",
+                "total_disk": f"{disk.total/1024/1024/1024:.2f} GB"
+            },
+            "process_info": {
+                "process_memory_rss": f"{process_memory.rss/1024/1024:.2f} MB",
+                "process_memory_vms": f"{process_memory.vms/1024/1024:.2f} MB",
+                "process_cpu_percent": f"{process.cpu_percent()}%",
+                "process_threads": process.num_threads()
+            },
+            "timestamp": datetime.datetime.now().isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Error in health check: {str(e)}")
+        return JSONResponse(
+            status_code=503,
+            content={
+                "status": "unhealthy",
+                "detail": str(e),
+                "service": "API",
+                "timestamp": datetime.datetime.now().isoformat()
+            }
+        )
 
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(
-        "main:app", 
+        app, 
         host="0.0.0.0", 
-        port=8000, 
-        workers=1,  # Limitamos a un solo worker
-        reload=False  # Desactivamos el auto-reload
+        port=8000,
+        workers=1,
+        reload=False
     )

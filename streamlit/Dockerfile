@@ -1,22 +1,13 @@
-# Usa una imagen base de Python
-FROM python:3.11-slim
+FROM python:3.9-slim
 
-RUN mkdir /streamlit
+WORKDIR /app
 
-# Copia los requisitos de dependencias
-COPY requirements.txt /streamlit
+COPY requirements.txt .
 
-WORKDIR /streamlit
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Limpia la caché de pip e instala las dependencias
-RUN pip cache purge && \
-    pip install --no-cache-dir -r requirements.txt
+COPY . .
 
-# Copia el contenido de la carpeta local al contenedor
-COPY . /streamlit
-
-# Expón el puerto en el que Streamlit se ejecuta
 EXPOSE 8501
 
-# Ejecuta la aplicación de Streamlit
-CMD ["streamlit", "run", "app.py"]
+CMD ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]
