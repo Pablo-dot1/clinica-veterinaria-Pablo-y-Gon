@@ -4,10 +4,14 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
+import os
+
+# URL base de la API
+API_URL = os.getenv('API_URL', 'http://localhost:8000')
 
 def get_data(endpoint):
     try:
-        response = requests.get(f"http://fastapi:8000/{endpoint}/")
+        response = requests.get(f"{API_URL}/{endpoint}/")
         if response.status_code == 200:
             return response.json()
         else:

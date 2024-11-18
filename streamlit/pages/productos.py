@@ -1,7 +1,9 @@
 import streamlit as st
 import requests
+import os
 
-API_URL_PRODUCTOS = "http://fastapi:8000/productos/"
+# URL base de la API
+API_URL = os.getenv('API_URL', 'http://localhost:8000')
 
 # Función para crear un nuevo producto
 def crear_producto():
@@ -13,7 +15,7 @@ def crear_producto():
 
     if st.button("Crear Producto"):
         datos = {"nombre": nombre, "categoria": categoria, "precio": precio, "stock": stock}
-        respuesta = requests.post(API_URL_PRODUCTOS, json=datos)
+        respuesta = requests.post(f"{API_URL}/productos/", json=datos)
         if respuesta.status_code == 201:
             st.success("Producto creado exitosamente")
         else:
@@ -22,7 +24,7 @@ def crear_producto():
 # Función para visualizar productos
 def ver_productos():
     st.header("Inventario de Productos")
-    respuesta = requests.get(API_URL_PRODUCTOS)
+    respuesta = requests.get(f"{API_URL}/productos/")
     if respuesta.status_code == 200:
         productos = respuesta.json()
         for producto in productos:
@@ -38,7 +40,7 @@ def actualizar_stock():
 
     if st.button("Actualizar Stock"):
         datos = {"id": id_producto, "stock": nuevo_stock}
-        respuesta = requests.put(f"{API_URL_PRODUCTOS}/{id_producto}", json=datos)
+        respuesta = requests.put(f"{API_URL}/productos/{id_producto}", json=datos)
         if respuesta.status_code == 200:
             st.success("Stock actualizado correctamente")
         else:
@@ -52,7 +54,7 @@ def registrar_venta():
 
     if st.button("Registrar Venta"):
         datos = {"producto_id": id_producto, "cantidad": cantidad}
-        respuesta = requests.post(f"{API_URL_PRODUCTOS}/venta", json=datos)
+        respuesta = requests.post(f"{API_URL}/productos/venta", json=datos)
         if respuesta.status_code == 201:
             st.success("Venta registrada exitosamente")
         else:

@@ -145,6 +145,9 @@ class Cita(BaseModel):
             raise ValueError(f'Estado inválido. Debe ser uno de: {", ".join(estados_validos)}')
         return v
 
+    def puede_eliminar(self) -> bool:
+        return self.estado != 'completada'
+
     class Config:
         from_attributes = True
 

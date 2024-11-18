@@ -1,9 +1,10 @@
 import streamlit as st
 import requests
 import json
+import os
 
-# URL del servidor FastAPI
-API_URL = "http://fastapi:8000"
+# URL base de la API
+API_URL = os.getenv('API_URL', 'http://localhost:8000')
 
 def load_clientes():
     try:

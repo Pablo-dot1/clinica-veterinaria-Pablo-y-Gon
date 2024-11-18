@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends, Response, Query
 from sqlalchemy.orm import Session
 from typing import List
 from datetime import datetime
-from models import Cliente, Cita, CitaCreate, CitaUpdate
+from models import Cliente, Cita, CitaCreate, CitaUpdate, Veterinario, ClienteCreate
 import crud
 from database import get_db
 from fastapi import status
@@ -33,6 +33,34 @@ async def health_check():
             detail="Error al verificar el estado del servicio"
         )
 
+@router.get("/veterinarios/", response_model=List[Veterinario])
+async def get_veterinarios(
+    skip: int = Query(0, ge=0, description="Número de registros a saltar"),
+    limit: int = Query(100, ge=1, le=100, description="Límite de registros a retornar"),
+    db: Session = Depends(get_db)
+):
+    """
+    Obtener todos los veterinarios con paginación
+    """
+    try:
+        veterinarios = crud.get_veterinarios(db, skip=skip, limit=limit)
+        if not veterinarios:
+            logger.info("No se encontraron veterinarios en la base de datos")
+            return []
+        return veterinarios
+    except SQLAlchemyError as e:
+        logger.error(f"Error de base de datos al obtener veterinarios: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error al acceder a la base de datos"
+        )
+    except Exception as e:
+        logger.error(f"Error inesperado al obtener veterinarios: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error interno del servidor"
+        )
+
 @router.get("/clientes/", response_model=List[Cliente])
 async def get_clientes(
     skip: int = Query(0, ge=0, description="Número de registros a saltar"),
@@ -56,6 +84,27 @@ async def get_clientes(
         )
     except Exception as e:
         logger.error(f"Error inesperado al obtener clientes: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error interno del servidor"
+        )
+
+@router.post("/clientes/", response_model=Cliente, status_code=status.HTTP_201_CREATED)
+async def create_cliente(cliente: ClienteCreate, db: Session = Depends(get_db)):
+    """
+    Crear un nuevo cliente
+    """
+    try:
+        db_cliente = crud.create_cliente(db, cliente)
+        return db_cliente
+    except SQLAlchemyError as e:
+        logger.error(f"Error de base de datos al crear cliente: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error al crear el cliente en la base de datos"
+        )
+    except Exception as e:
+        logger.error(f"Error inesperado al crear cliente: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error interno del servidor"

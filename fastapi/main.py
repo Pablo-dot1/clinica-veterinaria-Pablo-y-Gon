@@ -6,8 +6,8 @@ from database import engine, check_database_connection
 import db_models
 import logging
 import sys
-import psutil
 import os
+import datetime
 
 # Configure logging
 logging.basicConfig(
@@ -56,6 +56,14 @@ async def startup_event():
         logger.error(f"Error during application startup: {str(e)}")
         raise
 
+@app.exception_handler(Exception)
+async def global_exception_handler(request, exc):
+    logger.error(f"Global exception handler caught: {str(exc)}")
+    return JSONResponse(
+        status_code=500,
+        content={"message": "Internal server error", "detail": str(exc)}
+    )
+
 @app.get("/")
 async def root():
     try:
@@ -74,35 +82,35 @@ async def health_check():
         # Check database connection
         check_database_connection()
         
-        # Get system information
-        cpu_percent = psutil.cpu_percent(interval=1)  # 1 second interval for more accurate reading
-        memory = psutil.virtual_memory()
-        disk = psutil.disk_usage('/')
-        
-        # Get process-specific information
-        process = psutil.Process()
-        process_memory = process.memory_info()
-        
-        return {
+        # Get basic system information
+        system_info = {
             "status": "healthy",
             "database": "connected",
-            "system_info": {
-                "cpu_usage": f"{cpu_percent}%",
-                "memory_usage": f"{memory.percent}%",
-                "disk_usage": f"{disk.percent}%",
-                "memory_available": f"{memory.available/1024/1024:.2f} MB",
-                "disk_available": f"{disk.free/1024/1024/1024:.2f} GB",
-                "total_memory": f"{memory.total/1024/1024:.2f} MB",
-                "total_disk": f"{disk.total/1024/1024/1024:.2f} GB"
-            },
-            "process_info": {
-                "process_memory_rss": f"{process_memory.rss/1024/1024:.2f} MB",
-                "process_memory_vms": f"{process_memory.vms/1024/1024:.2f} MB",
-                "process_cpu_percent": f"{process.cpu_percent()}%",
-                "process_threads": process.num_threads()
-            },
             "timestamp": datetime.datetime.now().isoformat()
         }
+        
+        # Try to get detailed system info if psutil is available
+        try:
+            import psutil
+            cpu_percent = psutil.cpu_percent(interval=1)
+            memory = psutil.virtual_memory()
+            disk = psutil.disk_usage('/')
+            
+            system_info.update({
+                "system_info": {
+                    "cpu_usage": f"{cpu_percent}%",
+                    "memory_usage": f"{memory.percent}%",
+                    "disk_usage": f"{disk.percent}%",
+                    "memory_available": f"{memory.available/1024/1024:.2f} MB",
+                    "disk_available": f"{disk.free/1024/1024/1024:.2f} GB"
+                }
+            })
+        except ImportError:
+            # psutil not available, continue without detailed system info
+            pass
+            
+        return system_info
+        
     except Exception as e:
         logger.error(f"Error in health check: {str(e)}")
         return JSONResponse(

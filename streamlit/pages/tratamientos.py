@@ -1,8 +1,9 @@
 import streamlit as st
 import requests
-from datetime import datetime
+import os
 
-API_URL_TRATAMIENTOS = "http://fastapi:8000/tratamientos/"
+# URL base de la API
+API_URL = os.getenv('API_URL', 'http://localhost:8000')
 
 # Función para crear un nuevo tratamiento
 def crear_tratamiento():
@@ -40,7 +41,7 @@ def crear_tratamiento():
             "indicaciones": indicaciones
         }
         
-        respuesta = requests.post(API_URL_TRATAMIENTOS, json=datos)
+        respuesta = requests.post(f"{API_URL}/tratamientos/", json=datos)
         if respuesta.status_code == 201:
             st.success("¡Tratamiento creado exitosamente!")
             st.balloons()
@@ -54,7 +55,7 @@ def ver_tratamientos():
     # Añadir filtros
     filtro_nombre = st.text_input("Filtrar por nombre")
     
-    respuesta = requests.get(API_URL_TRATAMIENTOS)
+    respuesta = requests.get(f"{API_URL}/tratamientos/")
     if respuesta.status_code == 200:
         tratamientos = respuesta.json()
         
@@ -79,7 +80,7 @@ def modificar_tratamiento():
     tratamiento_id = st.number_input("ID del Tratamiento", min_value=1)
     
     # Obtener datos actuales del tratamiento
-    respuesta = requests.get(f"{API_URL_TRATAMIENTOS}/{tratamiento_id}")
+    respuesta = requests.get(f"{API_URL}/tratamientos/{tratamiento_id}")
     if respuesta.status_code == 200:
         tratamiento_actual = respuesta.json()
         
@@ -104,7 +105,7 @@ def modificar_tratamiento():
                 "indicaciones": indicaciones
             }
             
-            respuesta = requests.put(f"{API_URL_TRATAMIENTOS}/{tratamiento_id}", json=datos)
+            respuesta = requests.put(f"{API_URL}/tratamientos/{tratamiento_id}", json=datos)
             if respuesta.status_code == 200:
                 st.success("¡Tratamiento modificado correctamente!")
                 st.balloons()
@@ -122,7 +123,7 @@ def eliminar_tratamiento():
     if st.button("Eliminar Tratamiento"):
         # Confirmación de eliminación
         if st.checkbox("¿Está seguro de que desea eliminar este tratamiento?"):
-            respuesta = requests.delete(f"{API_URL_TRATAMIENTOS}/{tratamiento_id}")
+            respuesta = requests.delete(f"{API_URL}/tratamientos/{tratamiento_id}")
             if respuesta.status_code == 200:
                 st.success("Tratamiento eliminado correctamente")
             else:
