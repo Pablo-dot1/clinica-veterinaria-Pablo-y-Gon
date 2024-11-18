@@ -18,14 +18,16 @@ def load_clientes():
         st.error(f"Error de conexión: {str(e)}")
         return []
 
-def update_cliente(cliente_id, nombre, email, telefono):
+def update_cliente(cliente_id, nombre, apellido, email, telefono, direccion):
     try:
         response = requests.put(
             f"{API_URL}/clientes/{cliente_id}",
             json={
                 "nombre": nombre,
+                "apellido": apellido,
                 "email": email,
-                "telefono": telefono
+                "telefono": telefono,
+                "direccion": direccion
             }
         )
         if response.status_code == 200:
@@ -67,8 +69,10 @@ with tab1:
             cliente_data.append({
                 "ID": cliente.get("id", "N/A"),
                 "Nombre": cliente.get("nombre", "N/A"),
+                "Apellido": cliente.get("apellido", "N/A"),
                 "Email": cliente.get("email", "N/A"),
-                "Teléfono": cliente.get("telefono", "N/A")
+                "Teléfono": cliente.get("telefono", "N/A"),
+                "Dirección": cliente.get("direccion", "N/A")
             })
         
         st.table(cliente_data)
@@ -80,12 +84,14 @@ with tab2:
     st.write("### Agregar Nuevo Cliente")
     with st.form("nuevo_cliente_form"):
         nombre = st.text_input("Nombre")
+        apellido = st.text_input("Apellido")
         email = st.text_input("Email")
         telefono = st.text_input("Teléfono")
+        direccion = st.text_input("Dirección")
         
         submitted = st.form_submit_button("Agregar Cliente")
         if submitted:
-            if not nombre or not email or not telefono:
+            if not nombre or not apellido or not email or not telefono or not direccion:
                 st.error("Por favor, complete todos los campos")
             else:
                 try:
@@ -93,15 +99,17 @@ with tab2:
                         f"{API_URL}/clientes/",
                         json={
                             "nombre": nombre,
+                            "apellido": apellido,
                             "email": email,
-                            "telefono": telefono
+                            "telefono": telefono,
+                            "direccion": direccion
                         }
                     )
                     if response.status_code == 201:
                         st.success("Cliente agregado exitosamente")
-                        st.experimental_rerun()
+                        st.rerun()
                     else:
-                        st.error("Error al agregar el cliente")
+                        st.error(f"Error al agregar el cliente: {response.text}")
                 except requests.exceptions.RequestException as e:
                     st.error(f"Error de conexión: {str(e)}")
 
@@ -111,16 +119,18 @@ with tab3:
     with st.form("actualizar_cliente_form"):
         cliente_id = st.number_input("ID del Cliente", min_value=1, step=1)
         nombre = st.text_input("Nuevo Nombre")
+        apellido = st.text_input("Nuevo Apellido")
         email = st.text_input("Nuevo Email")
         telefono = st.text_input("Nuevo Teléfono")
+        direccion = st.text_input("Nueva Dirección")
         
         submitted = st.form_submit_button("Actualizar Cliente")
         if submitted:
-            if not nombre or not email or not telefono:
+            if not nombre or not apellido or not email or not telefono or not direccion:
                 st.error("Por favor, complete todos los campos")
             else:
-                if update_cliente(cliente_id, nombre, email, telefono):
-                    st.experimental_rerun()
+                if update_cliente(cliente_id, nombre, apellido, email, telefono, direccion):
+                    st.rerun()
 
 with tab4:
     # Formulario para eliminar cliente
@@ -128,4 +138,4 @@ with tab4:
     cliente_id = st.number_input("ID del Cliente a Eliminar", min_value=1, step=1)
     if st.button("Eliminar Cliente"):
         if delete_cliente(cliente_id):
-            st.experimental_rerun()
+            st.rerun()

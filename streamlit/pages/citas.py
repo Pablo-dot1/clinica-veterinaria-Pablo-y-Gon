@@ -91,7 +91,7 @@ with tab1:
                         if st.button("Cancelar", key=f"cancel_{cita['id']}"):
                             if cancelar_cita(cita['id']):
                                 st.success("Cita cancelada exitosamente")
-                                st.experimental_rerun()
+                                st.rerun()
                             else:
                                 st.error("Error al cancelar la cita")
     else:
@@ -148,7 +148,7 @@ with tab2:
                     
                     if response.status_code == 201:
                         st.success("Cita programada exitosamente")
-                        st.experimental_rerun()
+                        st.rerun()
                     else:
                         st.error(f"Error al programar la cita: {response.text}")
                 except requests.exceptions.RequestException as e:
