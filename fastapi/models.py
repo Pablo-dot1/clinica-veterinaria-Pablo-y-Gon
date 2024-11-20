@@ -40,6 +40,9 @@ class Veterinario(BaseModel):
     especialidad: constr(min_length=3, max_length=100, strip_whitespace=True)
     numero_colegiado: constr(min_length=4, max_length=20, strip_whitespace=True)
     horario_trabajo: constr(min_length=5, max_length=200)
+class VeterinarioCreate(Veterinario):
+    class Config:
+        from_attributes = True
 
     @validator('numero_colegiado')
     def validar_numero_colegiado(cls, v):

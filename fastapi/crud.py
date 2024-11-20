@@ -431,3 +431,20 @@ def delete_cliente(db: Session, cliente_id: int):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error al eliminar el cliente en la base de datos"
         )
+def create_veterinario(db: Session, veterinario: models.VeterinarioCreate):
+    """
+    Crear un nuevo veterinario.
+    """
+    try:
+        db_veterinario = VeterinarioDB(**veterinario.dict())
+        db.add(db_veterinario)
+        db.commit()
+        db.refresh(db_veterinario)
+        return db_veterinario
+    except SQLAlchemyError as e:
+        logger.error(f"Error al crear veterinario: {str(e)}")
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error al crear el veterinario"
+        )

@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List
 from datetime import datetime
 from models import (
-    Cliente, Cita, CitaCreate, CitaUpdate, Veterinario, ClienteCreate,
+    Cliente, Cita, CitaCreate, CitaUpdate, Veterinario, VeterinarioCreate, ClienteCreate,
     Producto, Tratamiento
 )
 import crud
@@ -433,4 +433,19 @@ async def delete_cliente(cliente_id: int, db: Session = Depends(get_db)):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error al eliminar el cliente"
+        )
+@router.post("/veterinarios/", response_model=Veterinario, status_code=status.HTTP_201_CREATED)
+async def create_veterinario(veterinario: VeterinarioCreate, db: Session = Depends(get_db)):
+    """
+    Crear un nuevo veterinario.
+    """
+    try:
+        return crud.create_veterinario(db, veterinario)
+    except HTTPException:
+        raise
+    except SQLAlchemyError as e:
+        logger.error(f"Error de base de datos al crear veterinario: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error al crear el veterinario en la base de datos"
         )
