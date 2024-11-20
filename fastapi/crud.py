@@ -274,6 +274,89 @@ def delete_cita(db: Session, cita_id: int):
             detail="Error al eliminar la cita"
         )
 
+# Funciones CRUD para Productos
+def get_productos(db: Session, skip: int = 0, limit: int = 100):
+    """
+    Obtener lista de productos con paginación
+    """
+    try:
+        return db.query(ProductoDB).offset(skip).limit(limit).all()
+    except SQLAlchemyError as e:
+        logger.error(f"Error al obtener productos: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error al obtener productos"
+        )
+
+def create_producto(db: Session, producto: models.Producto):
+    """
+    Crear un nuevo producto
+    """
+    try:
+        db_producto = ProductoDB(**producto.dict(exclude={'id'}))
+        db.add(db_producto)
+        db.commit()
+        db.refresh(db_producto)
+        return db_producto
+    except SQLAlchemyError as e:
+        logger.error(f"Error al crear producto: {str(e)}")
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error al crear el producto"
+        )
+
+def update_producto_stock(db: Session, producto_id: int, stock: int):
+    """
+    Actualizar el stock de un producto
+    """
+    try:
+        producto = db.query(ProductoDB).filter(ProductoDB.id == producto_id).first()
+        if not producto:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Producto no encontrado"
+            )
+        producto.stock = stock
+        db.commit()
+        db.refresh(producto)
+        return producto
+    except SQLAlchemyError as e:
+        logger.error(f"Error al actualizar stock del producto: {str(e)}")
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error al actualizar el stock"
+        )
+
+def registrar_venta_producto(db: Session, producto_id: int, cantidad: int):
+    """
+    Registrar una venta de producto
+    """
+    try:
+        producto = db.query(ProductoDB).filter(ProductoDB.id == producto_id).first()
+        if not producto:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Producto no encontrado"
+            )
+        if producto.stock < cantidad:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Stock insuficiente"
+            )
+        producto.stock -= cantidad
+        db.commit()
+        db.refresh(producto)
+        return {"mensaje": "Venta registrada exitosamente"}
+    except SQLAlchemyError as e:
+        logger.error(f"Error al registrar venta: {str(e)}")
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error al registrar la venta"
+        )
+
 def validate_producto_stock(db: Session, producto_id: int, cantidad: int):
     """
     Validar el stock de un producto
@@ -297,4 +380,54 @@ def validate_producto_stock(db: Session, producto_id: int, cantidad: int):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error al verificar el stock del producto"
+        )
+def update_cliente(db: Session, cliente_id: int, cliente: models.ClienteCreate):
+    """
+    Actualizar un cliente existente.
+    """
+    try:
+        db_cliente = db.query(ClienteDB).filter(ClienteDB.id == cliente_id).first()
+        if not db_cliente:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Cliente con ID {cliente_id} no encontrado"
+            )
+
+        for key, value in cliente.dict(exclude_unset=True).items():
+            setattr(db_cliente, key, value)
+
+        db.commit()
+        db.refresh(db_cliente)
+        logger.info(f"Cliente actualizado exitosamente: ID {cliente_id}")
+        return db_cliente
+
+    except HTTPException:
+        raise
+    except SQLAlchemyError as e:
+        logger.error(f"Error de base de datos al actualizar cliente {cliente_id}: {str(e)}")
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error al actualizar el cliente en la base de datos"
+        )
+def delete_cliente(db: Session, cliente_id: int):
+    """Eliminar un cliente por su ID."""
+    try:
+        db_cliente = db.query(ClienteDB).filter(ClienteDB.id == cliente_id).first()
+        if not db_cliente:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Cliente con ID {cliente_id} no encontrado"
+            )
+
+        db.delete(db_cliente)
+        db.commit()
+        logger.info(f"Cliente eliminado exitosamente: ID {cliente_id}")
+        return {"detail": "Cliente eliminado exitosamente"}
+    except SQLAlchemyError as e:
+        logger.error(f"Error de base de datos al eliminar cliente {cliente_id}: {str(e)}")
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error al eliminar el cliente en la base de datos"
         )

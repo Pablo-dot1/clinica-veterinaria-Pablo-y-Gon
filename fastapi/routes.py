@@ -2,7 +2,10 @@ from fastapi import APIRouter, HTTPException, Depends, Response, Query
 from sqlalchemy.orm import Session
 from typing import List
 from datetime import datetime
-from models import Cliente, Cita, CitaCreate, CitaUpdate, Veterinario, ClienteCreate
+from models import (
+    Cliente, Cita, CitaCreate, CitaUpdate, Veterinario, ClienteCreate,
+    Producto, Tratamiento
+)
 import crud
 from database import get_db
 from fastapi import status
@@ -241,4 +244,193 @@ async def delete_cita(cita_id: int, db: Session = Depends(get_db)):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error interno del servidor"
+        )
+
+# Rutas para Productos
+@router.get("/productos/", response_model=List[Producto])
+async def get_productos(
+    skip: int = Query(0, ge=0, description="Número de registros a saltar"),
+    limit: int = Query(100, ge=1, le=100, description="Límite de registros a retornar"),
+    db: Session = Depends(get_db)
+):
+    """
+    Obtener todos los productos con paginación
+    """
+    try:
+        productos = crud.get_productos(db, skip=skip, limit=limit)
+        return productos
+    except SQLAlchemyError as e:
+        logger.error(f"Error de base de datos al obtener productos: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error al acceder a la base de datos"
+        )
+
+@router.post("/productos/", response_model=Producto, status_code=status.HTTP_201_CREATED)
+async def create_producto(producto: Producto, db: Session = Depends(get_db)):
+    """
+    Crear un nuevo producto
+    """
+    try:
+        return crud.create_producto(db, producto)
+    except SQLAlchemyError as e:
+        logger.error(f"Error de base de datos al crear producto: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error al crear el producto"
+        )
+
+@router.put("/productos/{producto_id}", response_model=Producto)
+async def update_producto(
+    producto_id: int,
+    stock: int = Query(..., ge=0, description="Nuevo stock del producto"),
+    db: Session = Depends(get_db)
+):
+    """
+    Actualizar el stock de un producto
+    """
+    try:
+        return crud.update_producto_stock(db, producto_id, stock)
+    except SQLAlchemyError as e:
+        logger.error(f"Error de base de datos al actualizar stock: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error al actualizar el stock"
+        )
+
+@router.post("/productos/venta", status_code=status.HTTP_200_OK)
+async def registrar_venta(
+    producto_id: int = Query(..., description="ID del producto"),
+    cantidad: int = Query(..., gt=0, description="Cantidad vendida"),
+    db: Session = Depends(get_db)
+):
+    """
+    Registrar una venta de producto
+    """
+    try:
+        return crud.registrar_venta_producto(db, producto_id, cantidad)
+    except HTTPException:
+        raise
+    except SQLAlchemyError as e:
+        logger.error(f"Error de base de datos al registrar venta: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error al registrar la venta"
+        )
+
+# Rutas para Tratamientos
+@router.get("/tratamientos/", response_model=List[Tratamiento])
+async def get_tratamientos(
+    skip: int = Query(0, ge=0, description="Número de registros a saltar"),
+    limit: int = Query(100, ge=1, le=100, description="Límite de registros a retornar"),
+    db: Session = Depends(get_db)
+):
+    """
+    Obtener todos los tratamientos con paginación
+    """
+    try:
+        tratamientos = crud.get_tratamientos(db, skip=skip, limit=limit)
+        return tratamientos
+    except SQLAlchemyError as e:
+        logger.error(f"Error de base de datos al obtener tratamientos: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error al acceder a la base de datos"
+        )
+
+@router.post("/tratamientos/", response_model=Tratamiento, status_code=status.HTTP_201_CREATED)
+async def create_tratamiento(tratamiento: Tratamiento, db: Session = Depends(get_db)):
+    """
+    Crear un nuevo tratamiento
+    """
+    try:
+        return crud.create_tratamiento(db, tratamiento)
+    except SQLAlchemyError as e:
+        logger.error(f"Error de base de datos al crear tratamiento: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error al crear el tratamiento"
+        )
+
+@router.put("/tratamientos/{tratamiento_id}", response_model=Tratamiento)
+async def update_tratamiento(
+    tratamiento_id: int,
+    tratamiento: Tratamiento,
+    db: Session = Depends(get_db)
+):
+    """
+    Actualizar un tratamiento existente
+    """
+    try:
+        return crud.update_tratamiento(db, tratamiento_id, tratamiento)
+    except HTTPException:
+        raise
+    except SQLAlchemyError as e:
+        logger.error(f"Error de base de datos al actualizar tratamiento: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error al actualizar el tratamiento"
+        )
+
+@router.delete("/tratamientos/{tratamiento_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_tratamiento(tratamiento_id: int, db: Session = Depends(get_db)):
+    """
+    Eliminar un tratamiento
+    """
+    try:
+        if not crud.delete_tratamiento(db, tratamiento_id):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Tratamiento no encontrado"
+            )
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
+    except HTTPException:
+        raise
+    except SQLAlchemyError as e:
+        logger.error(f"Error de base de datos al eliminar tratamiento: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error al eliminar el tratamiento"
+        )
+
+# Rutas adicionales para Clientes
+@router.put("/clientes/{cliente_id}", response_model=Cliente)
+async def update_cliente(
+    cliente_id: int,
+    cliente: ClienteCreate,
+    db: Session = Depends(get_db)
+):
+    """
+    Actualizar un cliente existente
+    """
+    try:
+        return crud.update_cliente(db, cliente_id, cliente)
+    except HTTPException:
+        raise
+    except SQLAlchemyError as e:
+        logger.error(f"Error de base de datos al actualizar cliente: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error al actualizar el cliente"
+        )
+
+@router.delete("/clientes/{cliente_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_cliente(cliente_id: int, db: Session = Depends(get_db)):
+    """
+    Eliminar un cliente
+    """
+    try:
+        if not crud.delete_cliente(db, cliente_id):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Cliente no encontrado"
+            )
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
+    except HTTPException:
+        raise
+    except SQLAlchemyError as e:
+        logger.error(f"Error de base de datos al eliminar cliente: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error al eliminar el cliente"
         )
