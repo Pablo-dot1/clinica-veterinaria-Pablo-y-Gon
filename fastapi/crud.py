@@ -15,6 +15,17 @@ import logging
 logger = logging.getLogger(__name__)
 
 # CRUD operations for Cliente
+def verificar_cliente(db: Session, cliente_id: int) -> bool:
+    """
+    Verifica si existe un cliente con el ID proporcionado
+    """
+    try:
+        cliente = db.query(ClienteDB).filter(ClienteDB.id == cliente_id).first()
+        return cliente is not None
+    except SQLAlchemyError as e:
+        logger.error(f"Error al verificar cliente {cliente_id}: {str(e)}")
+        return False
+
 def get_cliente(db: Session, cliente_id: int):
     """
     Obtener un cliente por su ID con manejo de errores mejorado
@@ -447,6 +458,41 @@ def create_veterinario(db: Session, veterinario: models.VeterinarioCreate):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error al crear el veterinario"
+        )
+
+def get_mascota(db: Session, mascota_id: int):
+    """
+    Obtener una mascota por su ID
+    """
+    try:
+        mascota = db.query(MascotaDB).filter(MascotaDB.id == mascota_id).first()
+        if not mascota:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Mascota con ID {mascota_id} no encontrada"
+            )
+        return mascota
+    except SQLAlchemyError as e:
+        logger.error(f"Error al obtener mascota {mascota_id}: {str(e)}")
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error al acceder a la base de datos"
+        )
+
+def get_mascotas_by_cliente(db: Session, cliente_id: int):
+    """
+    Obtener todas las mascotas de un cliente específico
+    """
+    try:
+        mascotas = db.query(MascotaDB).filter(MascotaDB.cliente_id == cliente_id).all()
+        return mascotas
+    except SQLAlchemyError as e:
+        logger.error(f"Error al obtener mascotas del cliente {cliente_id}: {str(e)}")
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error al obtener las mascotas del cliente"
         )
 
 def create_mascota(db: Session, mascota: models.MascotaCreate):
