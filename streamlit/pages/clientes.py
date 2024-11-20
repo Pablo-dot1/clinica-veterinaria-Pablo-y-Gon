@@ -43,11 +43,11 @@ def update_cliente(cliente_id, nombre, apellido, email, telefono, direccion):
 def delete_cliente(cliente_id):
     try:
         response = requests.delete(f"{API_URL}/clientes/{cliente_id}")
-        if response.status_code == 200:
+        if response.status_code in [200, 204]:  # Aceptamos tanto 200 como 204 (No Content)
             st.success("Cliente eliminado exitosamente")
             return True
         else:
-            st.error("Error al eliminar el cliente")
+            st.error(f"Error al eliminar el cliente: {response.text}")
             return False
     except requests.exceptions.RequestException as e:
         st.error(f"Error de conexión: {str(e)}")
