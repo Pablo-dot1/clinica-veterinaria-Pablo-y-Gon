@@ -81,6 +81,10 @@ class Mascota(BaseModel):
     class Config:
         from_attributes = True
 
+class MascotaCreate(Mascota):
+    class Config:
+        from_attributes = True
+
 class HistorialMedico(BaseModel):
     id: Optional[int] = None
     mascota_id: int

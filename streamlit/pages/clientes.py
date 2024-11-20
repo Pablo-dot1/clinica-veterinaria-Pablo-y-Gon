@@ -106,7 +106,11 @@ with tab2:
                         }
                     )
                     if response.status_code == 201:
+                        nuevo_cliente = response.json()
                         st.success("Cliente agregado exitosamente")
+                        # Redirigir a la página de registro de mascota
+                        st.query_params['cliente_id'] = nuevo_cliente["id"]
+                        st.switch_page("pages/mascotas.py")
                         st.rerun()
                     else:
                         st.error(f"Error al agregar el cliente: {response.text}")

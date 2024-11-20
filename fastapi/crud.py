@@ -448,3 +448,21 @@ def create_veterinario(db: Session, veterinario: models.VeterinarioCreate):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error al crear el veterinario"
         )
+
+def create_mascota(db: Session, mascota: models.MascotaCreate):
+    """
+    Crear una nueva mascota
+    """
+    try:
+        db_mascota = MascotaDB(**mascota.dict())
+        db.add(db_mascota)
+        db.commit()
+        db.refresh(db_mascota)
+        return db_mascota
+    except SQLAlchemyError as e:
+        logger.error(f"Error al crear mascota: {str(e)}")
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error al crear la mascota"
+        )

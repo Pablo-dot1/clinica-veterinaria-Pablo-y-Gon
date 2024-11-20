@@ -4,7 +4,7 @@ from typing import List
 from datetime import datetime
 from models import (
     Cliente, Cita, CitaCreate, CitaUpdate, Veterinario, VeterinarioCreate, ClienteCreate,
-    Producto, Tratamiento
+    Producto, Tratamiento, Mascota, MascotaCreate
 )
 import crud
 from database import get_db
@@ -448,4 +448,28 @@ async def create_veterinario(veterinario: VeterinarioCreate, db: Session = Depen
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error al crear el veterinario en la base de datos"
+        )
+
+@router.post("/mascotas/", response_model=Mascota, status_code=status.HTTP_201_CREATED)
+async def create_mascota(mascota: MascotaCreate, db: Session = Depends(get_db)):
+    """
+    Crear una nueva mascota
+    """
+    try:
+        # Verificar que existe el cliente
+        cliente = crud.get_cliente(db, mascota.cliente_id)
+        if not cliente:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Cliente con ID {mascota.cliente_id} no encontrado"
+            )
+        return crud.create_mascota(db, mascota)
+    except HTTPException:
+        raise
+    except SQLAlchemyError as e:
+        logger.error(f"Error de base de datos al crear mascota: {str(e)}")
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error al crear la mascota en la base de datos"
         )
