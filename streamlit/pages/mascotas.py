@@ -22,7 +22,7 @@ def verificar_cliente(cliente_id):
         st.error(f"Error de conexión al verificar cliente: {str(e)}")
         return False
 
-def registrar_mascota(cliente_id, nombre, especie, raza, fecha_nacimiento):
+def registrar_mascota(cliente_id, nombre, especie, raza, fecha_nacimiento, edad, peso, sexo, alergias, condiciones_especiales):
     """Registra una nueva mascota en el sistema"""
     try:
         # Primero verificar si el cliente existe
@@ -37,9 +37,11 @@ def registrar_mascota(cliente_id, nombre, especie, raza, fecha_nacimiento):
                 "especie": especie,
                 "raza": raza,
                 "fecha_nacimiento": fecha_nacimiento,
-                "edad": 0,  # Se calculará en el backend
-                "peso": 0.1,  # Peso mínimo por defecto
-                "sexo": "M"  # Valor por defecto
+                "edad": edad,
+                "peso": peso,
+                "sexo": sexo,
+                "alergias": alergias,
+                "condiciones_especiales": condiciones_especiales
             }
         )
         
@@ -75,10 +77,19 @@ def main():
         cliente_id = int(cliente_id)
         with st.form("registro_mascota_form"):
             st.write(f"Registrando mascota para el cliente ID: {cliente_id}")
+            # Información básica
             nombre = st.text_input("Nombre de la mascota")
             especie = st.selectbox("Especie", ["Perro", "Gato", "Ave", "Otro"])
             raza = st.text_input("Raza")
             fecha_nacimiento = st.date_input("Fecha de nacimiento", min_value=date(2000, 1, 1), max_value=date.today())
+            edad = st.number_input("Edad (años)", min_value=0, max_value=50, step=1)
+            peso = st.number_input("Peso (kg)", min_value=0.1, max_value=200.0, step=0.1)
+            sexo = st.selectbox("Sexo", ["M", "H"])
+            
+            # Información médica
+            st.subheader("Información Médica")
+            alergias = st.text_area("Alergias conocidas", help="Ingrese las alergias conocidas de la mascota. Si no tiene, deje en blanco.")
+            condiciones_especiales = st.text_area("Condiciones especiales", help="Ingrese cualquier condición especial o nota importante sobre la mascota.")
             
             submitted = st.form_submit_button("Registrar Mascota")
             if submitted:
@@ -90,7 +101,12 @@ def main():
                         nombre,
                         especie,
                         raza,
-                        fecha_nacimiento.isoformat()
+                        fecha_nacimiento.isoformat(),
+                        edad,
+                        peso,
+                        sexo,
+                        alergias.strip() if alergias else None,
+                        condiciones_especiales.strip() if condiciones_especiales else None
                     ):
                         st.success("Mascota registrada exitosamente")
                         # Opción para registrar otra mascota para el mismo cliente

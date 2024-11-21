@@ -473,3 +473,10 @@ async def create_mascota(mascota: MascotaCreate, db: Session = Depends(get_db)):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error al crear la mascota en la base de datos"
         )
+@router.get("/verificar_cliente/{cliente_id}", response_model=bool)
+async def verificar_cliente(cliente_id: int, db: Session = Depends(get_db)):
+    """
+    Verificar si existe un cliente con el ID proporcionado.
+    """
+    existe = crud.verificar_cliente(db, cliente_id)
+    return existe

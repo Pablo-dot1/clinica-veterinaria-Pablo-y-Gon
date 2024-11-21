@@ -512,3 +512,16 @@ def create_mascota(db: Session, mascota: models.MascotaCreate):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error al crear la mascota"
         )
+def get_tratamientos(db: Session, skip: int = 0, limit: int = 100):
+    """
+    Obtener lista de tratamientos con paginación.
+    """
+    try:
+        return db.query(TratamientoDB).offset(skip).limit(limit).all()
+    except SQLAlchemyError as e:
+        logger.error(f"Error al obtener tratamientos: {str(e)}")
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error al obtener la lista de tratamientos"
+        )
