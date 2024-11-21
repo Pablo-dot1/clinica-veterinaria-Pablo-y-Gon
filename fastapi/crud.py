@@ -495,6 +495,33 @@ def get_mascotas_by_cliente(db: Session, cliente_id: int):
             detail="Error al obtener las mascotas del cliente"
         )
 
+def get_mascotas(
+    db: Session,
+    skip: int = 0,
+    limit: int = 100,
+    nombre: str = None,
+    especie: str = None,
+    cliente_id: int = None
+):
+    """
+    Obtener mascotas con filtros opcionales
+    """
+    try:
+        query = db.query(MascotaDB)
+        if nombre:
+            query = query.filter(MascotaDB.nombre.ilike(f"%{nombre}%"))
+        if especie:
+            query = query.filter(MascotaDB.especie == especie)
+        if cliente_id:
+            query = query.filter(MascotaDB.cliente_id == cliente_id)
+        return query.offset(skip).limit(limit).all()
+    except SQLAlchemyError as e:
+        logger.error(f"Error al obtener mascotas: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error al obtener las mascotas"
+        )
+
 def create_mascota(db: Session, mascota: models.MascotaCreate):
     """
     Crear una nueva mascota
@@ -511,6 +538,123 @@ def create_mascota(db: Session, mascota: models.MascotaCreate):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error al crear la mascota"
+        )
+
+def update_mascota(db: Session, mascota_id: int, mascota: models.MascotaCreate):
+    """
+    Actualizar una mascota existente
+    """
+    try:
+        db_mascota = db.query(MascotaDB).filter(MascotaDB.id == mascota_id).first()
+        if not db_mascota:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Mascota con ID {mascota_id} no encontrada"
+            )
+        
+        for key, value in mascota.dict(exclude_unset=True).items():
+            setattr(db_mascota, key, value)
+        
+        db.commit()
+        db.refresh(db_mascota)
+        return db_mascota
+    except SQLAlchemyError as e:
+        logger.error(f"Error al actualizar mascota: {str(e)}")
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error al actualizar la mascota"
+        )
+
+def delete_mascota(db: Session, mascota_id: int):
+    """
+    Eliminar una mascota
+    """
+    try:
+        db_mascota = db.query(MascotaDB).filter(MascotaDB.id == mascota_id).first()
+        if not db_mascota:
+            return False
+        db.delete(db_mascota)
+        db.commit()
+        return True
+    except SQLAlchemyError as e:
+        logger.error(f"Error al eliminar mascota: {str(e)}")
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error al eliminar la mascota"
+        )
+
+def get_historial_medico(db: Session, mascota_id: int):
+    """
+    Obtener el historial médico de una mascota
+    """
+    try:
+        return db.query(HistorialMedicoDB).filter(
+            HistorialMedicoDB.mascota_id == mascota_id
+        ).order_by(HistorialMedicoDB.fecha.desc()).all()
+    except SQLAlchemyError as e:
+        logger.error(f"Error al obtener historial médico: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error al obtener el historial médico"
+        )
+
+def get_vacunas_mascota(db: Session, mascota_id: int):
+    """
+    Obtener el registro de vacunas de una mascota
+    """
+    try:
+        return db.query(VacunaDB).filter(
+            VacunaDB.mascota_id == mascota_id
+        ).order_by(VacunaDB.fecha.desc()).all()
+    except SQLAlchemyError as e:
+        logger.error(f"Error al obtener vacunas: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error al obtener las vacunas"
+        )
+
+def create_historial_medico(db: Session, mascota_id: int, historial: models.HistorialMedicoCreate):
+    """
+    Crear un nuevo registro médico para una mascota
+    """
+    try:
+        db_historial = HistorialMedicoDB(
+            **historial.dict(),
+            mascota_id=mascota_id
+        )
+        db.add(db_historial)
+        db.commit()
+        db.refresh(db_historial)
+        return db_historial
+    except SQLAlchemyError as e:
+        logger.error(f"Error al crear historial médico: {str(e)}")
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error al crear el registro médico"
+        )
+
+def create_vacuna(db: Session, mascota_id: int, vacuna: models.VacunaCreate):
+    """
+    Crear un nuevo registro de vacuna para una mascota
+    """
+    try:
+        db_vacuna = VacunaDB(
+            **vacuna.dict(),
+            mascota_id=mascota_id
+        )
+        db.add(db_vacuna)
+        db.commit()
+        db.refresh(db_vacuna)
+        return db_vacuna
+    except SQLAlchemyError as e:
+        logger.error(f"Error al crear registro de vacuna: {str(e)}")
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error al crear el registro de vacuna"
         )
 def get_tratamientos(db: Session, skip: int = 0, limit: int = 100):
     """

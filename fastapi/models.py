@@ -95,6 +95,24 @@ class HistorialMedico(BaseModel):
     veterinario_id: int
     proxima_revision: Optional[datetime] = None
 
+class HistorialMedicoCreate(BaseModel):
+    mascota_id: int
+    fecha: datetime = Field(default_factory=datetime.now)
+    diagnostico: constr(min_length=10, max_length=500)
+    tratamiento: constr(min_length=10, max_length=500)
+    notas: Optional[str] = None
+    veterinario_id: int
+    proxima_revision: Optional[datetime] = None
+
+    @validator('proxima_revision')
+    def validar_proxima_revision(cls, v, values):
+        if v and 'fecha' in values and v <= values['fecha']:
+            raise ValueError('La próxima revisión debe ser posterior a la fecha actual')
+        return v
+
+    class Config:
+        from_attributes = True
+
     @validator('proxima_revision')
     def validar_proxima_revision(cls, v, values):
         if v and 'fecha' in values and v <= values['fecha']:
@@ -113,6 +131,24 @@ class Vacuna(BaseModel):
     veterinario_id: int
     lote: constr(min_length=4, max_length=50)
     notas: Optional[str] = None
+
+class VacunaCreate(BaseModel):
+    mascota_id: int
+    nombre_vacuna: constr(min_length=2, max_length=100)
+    fecha_aplicacion: datetime
+    fecha_proxima: datetime
+    veterinario_id: int
+    lote: constr(min_length=4, max_length=50)
+    notas: Optional[str] = None
+
+    @validator('fecha_proxima')
+    def validar_fecha_proxima(cls, v, values):
+        if v and 'fecha_aplicacion' in values and v <= values['fecha_aplicacion']:
+            raise ValueError('La fecha próxima debe ser posterior a la fecha de aplicación')
+        return v
+
+    class Config:
+        from_attributes = True
 
     @validator('fecha_proxima')
     def validar_fecha_proxima(cls, v, values):

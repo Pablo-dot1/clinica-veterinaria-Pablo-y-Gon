@@ -4,7 +4,8 @@ from typing import List
 from datetime import datetime
 from models import (
     Cliente, Cita, CitaCreate, CitaUpdate, Veterinario, VeterinarioCreate, ClienteCreate,
-    Producto, Tratamiento, Mascota, MascotaCreate
+    Producto, Tratamiento, Mascota, MascotaCreate, HistorialMedico, Vacuna,
+    HistorialMedicoCreate, VacunaCreate
 )
 import crud
 from database import get_db
@@ -507,6 +508,28 @@ async def create_veterinario(veterinario: VeterinarioCreate, db: Session = Depen
             detail="Error al crear el veterinario en la base de datos"
         )
 
+# Rutas para Mascotas
+@router.get("/mascotas/", response_model=List[Mascota])
+async def get_mascotas(
+    skip: int = Query(0, ge=0, description="Número de registros a saltar"),
+    limit: int = Query(100, ge=1, le=100, description="Límite de registros a retornar"),
+    nombre: str = Query(None, description="Filtrar por nombre de mascota"),
+    especie: str = Query(None, description="Filtrar por especie"),
+    cliente_id: int = Query(None, description="Filtrar por ID del cliente"),
+    db: Session = Depends(get_db)
+):
+    """
+    Obtener todas las mascotas con filtros opcionales
+    """
+    try:
+        return crud.get_mascotas(db, skip=skip, limit=limit, nombre=nombre, especie=especie, cliente_id=cliente_id)
+    except SQLAlchemyError as e:
+        logger.error(f"Error al obtener mascotas: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error al obtener las mascotas"
+        )
+
 @router.post("/mascotas/", response_model=Mascota, status_code=status.HTTP_201_CREATED)
 async def create_mascota(mascota: MascotaCreate, db: Session = Depends(get_db)):
     """
@@ -530,6 +553,181 @@ async def create_mascota(mascota: MascotaCreate, db: Session = Depends(get_db)):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error al crear la mascota en la base de datos"
         )
+
+@router.get("/mascotas/{mascota_id}", response_model=Mascota)
+async def get_mascota_by_id(mascota_id: int, db: Session = Depends(get_db)):
+    """
+    Obtener una mascota específica por su ID
+    """
+    try:
+        mascota = crud.get_mascota(db, mascota_id)
+        if not mascota:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Mascota con ID {mascota_id} no encontrada"
+            )
+        return mascota
+    except HTTPException:
+        raise
+    except SQLAlchemyError as e:
+        logger.error(f"Error al obtener mascota: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error al obtener la mascota"
+        )
+
+@router.put("/mascotas/{mascota_id}", response_model=Mascota)
+async def update_mascota(
+    mascota_id: int,
+    mascota_update: MascotaCreate,
+    db: Session = Depends(get_db)
+):
+    """
+    Actualizar una mascota existente
+    """
+    try:
+        return crud.update_mascota(db, mascota_id, mascota_update)
+    except HTTPException:
+        raise
+    except SQLAlchemyError as e:
+        logger.error(f"Error al actualizar mascota: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error al actualizar la mascota"
+        )
+
+@router.delete("/mascotas/{mascota_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_mascota(mascota_id: int, db: Session = Depends(get_db)):
+    """
+    Eliminar una mascota
+    """
+    try:
+        if not crud.delete_mascota(db, mascota_id):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Mascota no encontrada"
+            )
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
+    except HTTPException:
+        raise
+    except SQLAlchemyError as e:
+        logger.error(f"Error al eliminar mascota: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error al eliminar la mascota"
+        )
+
+@router.get("/mascotas/{mascota_id}/historial", response_model=List[HistorialMedico])
+async def get_historial_medico(mascota_id: int, db: Session = Depends(get_db)):
+    """
+    Obtener el historial médico de una mascota
+    """
+    try:
+        return crud.get_historial_medico(db, mascota_id)
+    except HTTPException:
+        raise
+    except SQLAlchemyError as e:
+        logger.error(f"Error al obtener historial médico: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error al obtener el historial médico"
+        )
+
+@router.get("/mascotas/{mascota_id}/vacunas", response_model=List[Vacuna])
+async def get_vacunas(mascota_id: int, db: Session = Depends(get_db)):
+    """
+    Obtener el registro de vacunas de una mascota
+    """
+    try:
+        return crud.get_vacunas_mascota(db, mascota_id)
+    except HTTPException:
+        raise
+    except SQLAlchemyError as e:
+        logger.error(f"Error al obtener vacunas: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error al obtener las vacunas"
+        )
+
+@router.post("/mascotas/{mascota_id}/historial", response_model=HistorialMedico, status_code=status.HTTP_201_CREATED)
+async def create_historial_medico(
+    mascota_id: int,
+    historial: HistorialMedicoCreate,
+    db: Session = Depends(get_db)
+):
+    """
+    Crear un nuevo registro médico para una mascota
+    """
+    try:
+        # Verificar que existe la mascota
+        mascota = crud.get_mascota(db, mascota_id)
+        if not mascota:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Mascota con ID {mascota_id} no encontrada"
+            )
+        
+        # Verificar que existe el veterinario
+        veterinario = crud.get_veterinario(db, historial.veterinario_id)
+        if not veterinario:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Veterinario con ID {historial.veterinario_id} no encontrado"
+            )
+        
+        return crud.create_historial_medico(db, mascota_id, historial)
+    except HTTPException:
+        raise
+    except SQLAlchemyError as e:
+        logger.error(f"Error al crear historial médico: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error al crear el registro médico"
+        )
+
+@router.post("/mascotas/{mascota_id}/vacunas", response_model=Vacuna, status_code=status.HTTP_201_CREATED)
+async def create_vacuna(
+    mascota_id: int,
+    vacuna: VacunaCreate,
+    db: Session = Depends(get_db)
+):
+    """
+    Registrar una nueva vacuna para una mascota
+    """
+    try:
+        # Verificar que existe la mascota
+        mascota = crud.get_mascota(db, mascota_id)
+        if not mascota:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Mascota con ID {mascota_id} no encontrada"
+            )
+        
+        # Verificar que existe el veterinario
+        veterinario = crud.get_veterinario(db, vacuna.veterinario_id)
+        if not veterinario:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Veterinario con ID {vacuna.veterinario_id} no encontrado"
+            )
+
+        # Verificar que la fecha de aplicación no sea futura
+        if vacuna.fecha_aplicacion > datetime.now():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="La fecha de aplicación no puede ser futura"
+            )
+        
+        return crud.create_vacuna(db, mascota_id, vacuna)
+    except HTTPException:
+        raise
+    except SQLAlchemyError as e:
+        logger.error(f"Error al registrar vacuna: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error al registrar la vacuna"
+        )
+
 @router.get("/verificar_cliente/{cliente_id}", response_model=bool)
 async def verificar_cliente(cliente_id: int, db: Session = Depends(get_db)):
     """
