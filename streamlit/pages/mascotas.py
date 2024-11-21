@@ -109,17 +109,32 @@ def main():
                         condiciones_especiales.strip() if condiciones_especiales else None
                     ):
                         st.success("Mascota registrada exitosamente")
-                        # Opción para registrar otra mascota para el mismo cliente
-                        if st.button("Registrar otra mascota para este cliente"):
-                            st.session_state["cliente_id_input"] = str(cliente_id)
-                            st.experimental_rerun()
-                        # Opción para registrar mascota para otro cliente
-                        if st.button("Registrar mascota para otro cliente"):
-                            st.session_state["cliente_id_input"] = ""
-                            st.experimental_rerun()
-                        # Opción para volver a la página de clientes
-                        if st.button("Volver a Clientes"):
-                            st.switch_page("pages/clientes.py")
+
+        # Botones fuera del formulario
+        if submitted and registrar_mascota(
+            int(cliente_id),
+            nombre,
+            especie,
+            raza,
+            fecha_nacimiento.isoformat(),
+            edad,
+            peso,
+            sexo,
+            alergias.strip() if alergias else None,
+            condiciones_especiales.strip() if condiciones_especiales else None
+        ):
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                if st.button("Registrar otra mascota para este cliente"):
+                    st.session_state["cliente_id_input"] = str(cliente_id)
+                    st.experimental_rerun()
+            with col2:
+                if st.button("Registrar mascota para otro cliente"):
+                    st.session_state["cliente_id_input"] = ""
+                    st.experimental_rerun()
+            with col3:
+                if st.button("Volver a Clientes"):
+                    st.switch_page("pages/clientes.py")
     else:
         if cliente_id and not cliente_id.isdigit():
             st.error("Por favor, ingrese un ID de cliente válido (solo números)")
