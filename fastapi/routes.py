@@ -92,6 +92,63 @@ async def get_clientes(
             detail="Error interno del servidor"
         )
 
+@router.get("/clientes/{cliente_id}", response_model=Cliente)
+async def get_cliente_by_id(
+    cliente_id: int,
+    db: Session = Depends(get_db)
+):
+    """
+    Obtener un cliente específico por su ID
+    """
+    try:
+        cliente = crud.get_cliente(db, cliente_id)
+        if not cliente:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Cliente con ID {cliente_id} no encontrado"
+            )
+        return cliente
+    except HTTPException:
+        raise
+    except SQLAlchemyError as e:
+        logger.error(f"Error de base de datos al obtener cliente {cliente_id}: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error al acceder a la base de datos"
+        )
+    except Exception as e:
+        logger.error(f"Error inesperado al obtener cliente: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error interno del servidor"
+        )
+async def get_clientes(
+    skip: int = Query(0, ge=0, description="Número de registros a saltar"),
+    limit: int = Query(100, ge=1, le=100, description="Límite de registros a retornar"),
+    db: Session = Depends(get_db)
+):
+    """
+    Obtener todos los clientes con paginación
+    """
+    try:
+        clientes = crud.get_clientes(db, skip=skip, limit=limit)
+        if not clientes:
+            logger.info("No se encontraron clientes en la base de datos")
+            return []
+        return clientes
+    except SQLAlchemyError as e:
+        logger.error(f"Error de base de datos al obtener clientes: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error al acceder a la base de datos"
+        )
+    except Exception as e:
+        logger.error(f"Error inesperado al obtener clientes: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error interno del servidor"
+        )
+
 @router.post("/clientes/", response_model=Cliente, status_code=status.HTTP_201_CREATED)
 async def create_cliente(cliente: ClienteCreate, db: Session = Depends(get_db)):
     """
