@@ -522,12 +522,84 @@ async def get_mascotas(
     Obtener todas las mascotas con filtros opcionales
     """
     try:
+        mascotas = crud.get_mascotas(
+            db=db,
+            skip=skip,
+            limit=limit,
+            nombre=nombre,
+            especie=especie,
+            cliente_id=cliente_id
+        )
+        return mascotas
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error al obtener mascotas: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error al obtener las mascotas"
+        )
+
+@router.get("/clientes/{cliente_id}/mascotas", response_model=List[Mascota])
+async def get_mascotas_by_cliente(
+    cliente_id: int,
+    db: Session = Depends(get_db)
+):
+    """
+    Obtener todas las mascotas de un cliente específico
+    """
+    try:
+        # Primero verificamos que el cliente existe
+        cliente = crud.get_cliente(db, cliente_id)
+        if not cliente:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Cliente con ID {cliente_id} no encontrado"
+            )
+        
+        mascotas = crud.get_mascotas_by_cliente(db, cliente_id)
+        return mascotas
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error al obtener mascotas del cliente {cliente_id}: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error al obtener las mascotas del cliente"
+        )
+    """
+    Obtener todas las mascotas con filtros opcionales
+    """
+    try:
         return crud.get_mascotas(db, skip=skip, limit=limit, nombre=nombre, especie=especie, cliente_id=cliente_id)
     except SQLAlchemyError as e:
         logger.error(f"Error al obtener mascotas: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error al obtener las mascotas"
+        )
+
+@router.get("/mascotas/cliente/{cliente_id}", response_model=List[Mascota])
+async def get_mascotas_by_cliente_id(cliente_id: int, db: Session = Depends(get_db)):
+    """
+    Obtener todas las mascotas de un cliente específico
+    """
+    try:
+        # Verificar que existe el cliente
+        cliente = crud.get_cliente(db, cliente_id)
+        if not cliente:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Cliente con ID {cliente_id} no encontrado"
+            )
+        return crud.get_mascotas_by_cliente(db, cliente_id)
+    except HTTPException:
+        raise
+    except SQLAlchemyError as e:
+        logger.error(f"Error de base de datos al obtener mascotas del cliente {cliente_id}: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error al obtener las mascotas del cliente"
         )
 
 @router.post("/mascotas/", response_model=Mascota, status_code=status.HTTP_201_CREATED)

@@ -486,6 +486,9 @@ def get_mascotas_by_cliente(db: Session, cliente_id: int):
     """
     try:
         mascotas = db.query(MascotaDB).filter(MascotaDB.cliente_id == cliente_id).all()
+        if not mascotas:
+            logger.info(f"No se encontraron mascotas para el cliente {cliente_id}")
+            return []
         return mascotas
     except SQLAlchemyError as e:
         logger.error(f"Error al obtener mascotas del cliente {cliente_id}: {str(e)}")
