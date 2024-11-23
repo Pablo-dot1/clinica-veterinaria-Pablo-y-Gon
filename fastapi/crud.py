@@ -498,32 +498,7 @@ def get_mascotas_by_cliente(db: Session, cliente_id: int):
             detail="Error al obtener las mascotas del cliente"
         )
 
-def get_mascotas(
-    db: Session,
-    skip: int = 0,
-    limit: int = 100,
-    nombre: str = None,
-    especie: str = None,
-    cliente_id: int = None
-):
-    """
-    Obtener mascotas con filtros opcionales
-    """
-    try:
-        query = db.query(MascotaDB)
-        if nombre:
-            query = query.filter(MascotaDB.nombre.ilike(f"%{nombre}%"))
-        if especie:
-            query = query.filter(MascotaDB.especie == especie)
-        if cliente_id:
-            query = query.filter(MascotaDB.cliente_id == cliente_id)
-        return query.offset(skip).limit(limit).all()
-    except SQLAlchemyError as e:
-        logger.error(f"Error al obtener mascotas: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Error al obtener las mascotas"
-        )
+
 
 def create_mascota(db: Session, mascota: models.MascotaCreate):
     """
@@ -541,6 +516,19 @@ def create_mascota(db: Session, mascota: models.MascotaCreate):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error al crear la mascota"
+        )
+def get_mascotas(db: Session, skip: int = 0, limit: int = 100):
+    """
+    Obtener lista de mascotas con paginación y manejo de errores mejorado
+    """
+    try:
+        return db.query(MascotaDB).offset(skip).limit(limit).all()
+    except SQLAlchemyError as e:
+        logger.error(f"Error al obtener lista de mascotas: {str(e)}")
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error al obtener la lista de mascotas"
         )
 
 def update_mascota(db: Session, mascota_id: int, mascota: models.MascotaCreate):

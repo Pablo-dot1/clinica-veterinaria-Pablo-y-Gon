@@ -509,75 +509,7 @@ async def create_veterinario(veterinario: VeterinarioCreate, db: Session = Depen
         )
 
 # Rutas para Mascotas
-@router.get("/mascotas/", response_model=List[Mascota])
-async def get_mascotas(
-    skip: int = Query(0, ge=0, description="Número de registros a saltar"),
-    limit: int = Query(100, ge=1, le=100, description="Límite de registros a retornar"),
-    nombre: str = Query(None, description="Filtrar por nombre de mascota"),
-    especie: str = Query(None, description="Filtrar por especie"),
-    cliente_id: int = Query(None, description="Filtrar por ID del cliente"),
-    db: Session = Depends(get_db)
-):
-    """
-    Obtener todas las mascotas con filtros opcionales
-    """
-    try:
-        mascotas = crud.get_mascotas(
-            db=db,
-            skip=skip,
-            limit=limit,
-            nombre=nombre,
-            especie=especie,
-            cliente_id=cliente_id
-        )
-        return mascotas
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error al obtener mascotas: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Error al obtener las mascotas"
-        )
 
-@router.get("/clientes/{cliente_id}/mascotas", response_model=List[Mascota])
-async def get_mascotas_by_cliente(
-    cliente_id: int,
-    db: Session = Depends(get_db)
-):
-    """
-    Obtener todas las mascotas de un cliente específico
-    """
-    try:
-        # Primero verificamos que el cliente existe
-        cliente = crud.get_cliente(db, cliente_id)
-        if not cliente:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Cliente con ID {cliente_id} no encontrado"
-            )
-        
-        mascotas = crud.get_mascotas_by_cliente(db, cliente_id)
-        return mascotas
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error al obtener mascotas del cliente {cliente_id}: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Error al obtener las mascotas del cliente"
-        )
-    """
-    Obtener todas las mascotas con filtros opcionales
-    """
-    try:
-        return crud.get_mascotas(db, skip=skip, limit=limit, nombre=nombre, especie=especie, cliente_id=cliente_id)
-    except SQLAlchemyError as e:
-        logger.error(f"Error al obtener mascotas: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Error al obtener las mascotas"
-        )
 
 @router.get("/mascotas/cliente/{cliente_id}", response_model=List[Mascota])
 async def get_mascotas_by_cliente_id(cliente_id: int, db: Session = Depends(get_db)):
@@ -807,3 +739,31 @@ async def verificar_cliente(cliente_id: int, db: Session = Depends(get_db)):
     """
     existe = crud.verificar_cliente(db, cliente_id)
     return existe
+
+@router.get("/mascotas/", response_model=List[Mascota])
+async def get_mascotas(
+    skip: int = Query(0, ge=0, description="Número de registros a saltar"),
+    limit: int = Query(100, ge=1, le=100, description="Límite de registros a retornar"),
+    db: Session = Depends(get_db)
+):
+    """ 
+    Obtener todas las mascotas con paginación 
+    """
+    try:
+        mascotas = crud.get_mascotas(db, skip=skip, limit=limit)
+        if not mascotas:
+            logger.info("No se encontraron mascotas en la base de datos")
+            return []
+        return mascotas
+    except SQLAlchemyError as e:
+        logger.error(f"Error de base de datos al obtener mascotas: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error al acceder a la base de datos"
+        )
+    except Exception as e:
+        logger.error(f"Error inesperado al obtener mascotas: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error interno del servidor"
+        )
