@@ -678,3 +678,32 @@ def get_tratamientos(db: Session, skip: int = 0, limit: int = 100):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error al obtener la lista de tratamientos"
         )
+def create_tratamiento(db: Session, tratamiento: models.TratamientoCreate) -> TratamientoDB:
+    """
+    Crear un nuevo tratamiento en la base de datos.
+    
+    Args:
+        db (Session): La sesión de la base de datos.
+        tratamiento (models.TratamientoCreate): Los datos del tratamiento a crear.
+
+    Returns:
+        TratamientoDB: El tratamiento creado.
+    """
+    try:
+        # Crear una instancia de TratamientoDB a partir de los datos de TratamientoCreate
+        db_tratamiento = TratamientoDB(**tratamiento.dict())
+        
+        # Agregar el tratamiento a la sesión de la base de datos
+        db.add(db_tratamiento)
+        db.commit()  # Confirmar los cambios
+        db.refresh(db_tratamiento)  # Obtener el tratamiento creado con el ID generado
+        
+        logger.info(f"Tratamiento creado exitosamente: ID {db_tratamiento.id}")
+        return db_tratamiento
+    except SQLAlchemyError as e:
+        logger.error(f"Error al crear tratamiento: {str(e)}")
+        db.rollback()  # Deshacer cambios en caso de error
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error al crear el tratamiento en la base de datos"
+        )

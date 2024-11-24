@@ -247,7 +247,10 @@ class Tratamiento(BaseModel):
         if v is not None and v < 1:
             raise ValueError('La duración debe ser al menos 1 día')
         return v
-
+class TratamientoCreate(Tratamiento):
+    class Config:
+        from_attributes = True
+        
     class Config:
         from_attributes = True
 

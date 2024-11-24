@@ -54,6 +54,17 @@ def cancelar_cita(cita_id):
         st.error(f"Error al cancelar la cita: {str(e)}")
         return False
 
+def load_tratamientos():
+    try:
+        response = requests.get(f"{API_URL}/tratamientos/")
+        if response.status_code == 200:
+            return response.json()
+        else:
+            st.error(f"Error al cargar tratamientos: {response.status_code}")
+            return []
+    except requests.exceptions.RequestException as e:
+        st.error(f"Error de conexión: {str(e)}")
+        return []
 st.title("Gestión de Citas")
 
 # Tabs para organizar la interfaz
@@ -103,6 +114,7 @@ with tab2:
     # Cargar datos necesarios
     clientes = load_clientes()
     veterinarios = load_veterinarios()
+    tratamientos = load_tratamientos()  # Cargar tratamientos si es necesario
     
     with st.form("nueva_cita_form"):
         # Selección de cliente y veterinario
@@ -123,6 +135,7 @@ with tab2:
         # Detalles adicionales
         motivo = st.text_area("Motivo de la cita")
         notas = st.text_area("Notas adicionales")
+        tratamiento_id = st.selectbox("Tratamiento (opcional)", options=[None] + [t['id'] for t in tratamientos])
         
         submitted = st.form_submit_button("Programar Cita")
         if submitted:
@@ -142,7 +155,8 @@ with tab2:
                             "fecha": fecha_hora_iso,
                             "motivo": motivo,
                             "notas": notas,
-                            "estado": "pendiente"
+                            "estado": "pendiente",
+                            "tratamiento_id": tratamiento_id  # Asegúrate de incluir este campo si es necesario
                         }
                     )
                     
