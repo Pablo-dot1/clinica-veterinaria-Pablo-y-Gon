@@ -7,11 +7,15 @@ import os
 # URL base de la API
 API_URL = os.getenv('API_URL', 'http://localhost:8000')
 
-def load_citas():
+def load_citas(estado=None):
     try:
         response = requests.get(f"{API_URL}/citas/")
         if response.status_code == 200:
-            return response.json()
+            citas = response.json()
+            # Filtrar las citas por estado si se proporciona
+            if estado and estado != "Todas":
+                citas = [cita for cita in citas if cita['estado'] == estado]
+            return citas
         else:
             st.error(f"Error al cargar citas: {response.status_code}")
             return []
@@ -98,7 +102,7 @@ with tab1:
     )
 
     # Cargar y mostrar citas
-    citas = load_citas()
+    citas = load_citas(estado=estado_filtro)
     if citas:
         st.write("### Lista de Citas")
         for cita in citas:
