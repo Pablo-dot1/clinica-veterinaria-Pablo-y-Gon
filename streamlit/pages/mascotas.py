@@ -116,7 +116,7 @@ def main():
         st.header("Registrar Mascota")
         cliente_id = st.text_input("ID del Cliente")
         nombre = st.text_input("Nombre de la Mascota")
-        especie = st.selectbox("Especie", ["Perro", "Gato", "Otro"])
+        especie = st.selectbox("Especie ", ["Perro", "Gato", "Otro"])
         raza = st.text_input("Raza")
         fecha_nacimiento = st.date_input("Fecha de Nacimiento")
         edad = st.number_input("Edad (años)", min_value=0)
@@ -164,57 +164,66 @@ def main():
     with tab4:
         # Formulario para actualizar mascota
         st.write("### Actualizar Mascota")
-        with st.form("actualizar_mascota_form"):
-            mascota_id = st.number_input("ID de la Mascota", min_value=1, step=1)
         
-            # Obtener datos actuales de la mascota
-            mascota = get_mascota_details(mascota_id)
-            if mascota:
-                # Mostrar el cliente_id en un campo de texto que no se puede modificar
-                cliente_id = mascota['cliente_id']
-                st.text_input("ID del Cliente", value=cliente_id, disabled=True)
+        # Campo para ingresar el ID de la mascota
+        mascota_id = st.number_input("ID de la Mascota", min_value=1, step=1)
 
-                # Campos editables
-                nombre = st.text_input("Nuevo Nombre", value=mascota['nombre'])
-                especie = st.selectbox("Nueva Especie", ["Perro", "Gato", "Otro"], index=["Perro", "Gato", "Otro"].index(mascota['especie']))
-                raza = st.text_input("Nueva Raza", value=mascota['raza'])
-                
-                # Convertir la fecha de nacimiento en formato datetime
-                fecha_nacimiento = st.date_input(
-                    "Nueva Fecha de Nacimiento",
-                    value=datetime.strptime(mascota['fecha_nacimiento'], "%Y-%m-%d").date() if mascota['fecha_nacimiento'] else None
-                )
-                
-                edad = st.number_input("Nueva Edad (años)", value=mascota['edad'], min_value=0)
-                peso = st.number_input("Nuevo Peso (kg)", value=mascota['peso'], min_value=0.0)
-                sexo = st.selectbox("Nuevo Sexo", ["M", "H"], index=["M", "H"].index(mascota['sexo']))
-                alergias = st.text_input("Nuevas Alergias (opcional)", value=mascota['alergias'] if mascota['alergias'] else "")
-                condiciones_especiales = st.text_input("Nuevas Condiciones Especiales (opcional)", value=mascota['condiciones_especiales'] if mascota['condiciones_especiales'] else "")
+        # Botón para cargar los datos de la mascota
+        if st.button("Cargar Datos de la Mascota"):
+            if mascota_id:
+                st.session_state.mascota_id = mascota_id  # Guardar el ID en el estado de la sesión
+            else:
+                st.error("Por favor, ingrese un ID válido.")
+
+        # Obtener datos actuales de la mascota
+        mascota = get_mascota_details(st.session_state.get("mascota_id")) if "mascota_id" in st.session_state else None
+
+        if mascota:
+            # Mostrar el cliente_id en un campo de texto que no se puede modificar
+            cliente_id = mascota['cliente_id']
+            st.text_input("ID del Cliente", value=cliente_id, disabled=True)
+
+            # Campos editables
+            nombre = st.text_input("Nuevo Nombre", value=mascota['nombre'])
+            especie = st.selectbox("Nueva Especie", ["Perro", "Gato", "Otro"], index=["Perro", "Gato", "Otro"].index(mascota['especie']))
+            raza = st.text_input("Nueva Raza", value=mascota['raza'])
+            
+            # Convertir la fecha de nacimiento en formato datetime
+            fecha_nacimiento = st.date_input(
+                "Nueva Fecha de Nacimiento",
+                value=datetime.strptime(mascota['fecha_nacimiento'], "%Y-%m-%d").date() if mascota['fecha_nacimiento'] else None
+            )
+            
+            edad = st.number_input("Nueva Edad (años)", value=mascota['edad'], min_value=0)
+            peso = st.number_input("Nuevo Peso (kg)", value=mascota['peso'], min_value=0.0)
+            sexo = st.selectbox("Nuevo Sexo", ["M", "H"], index=["M", "H"].index(mascota['sexo']))
+            alergias = st.text_input("Nuevas Alergias (opcional)", value=mascota['alergias'] if mascota['alergias'] else "")
+            condiciones_especiales = st.text_input("Nuevas Condiciones Especiales (opcional)", value=mascota['condiciones_especiales'] if mascota['condiciones_especiales'] else "")
         
-                submitted = st.form_submit_button("Actualizar Mascota")
-                if submitted:
-                    if not nombre or not especie or not raza or not edad or not peso or not sexo:
-                        st.error("Por favor, complete todos los campos requeridos")
-                    else:
-                        # Convertir fecha_nacimiento a string en formato ISO
-                        fecha_nacimiento_str = fecha_nacimiento.isoformat() if fecha_nacimiento else None
+            submitted = st.button("Actualizar Mascota")
+            if submitted:
+                if not nombre or not especie or not raza or not edad or not peso or not sexo:
+                    st.error("Por favor, complete todos los campos requeridos")
+                else:
+                    # Convertir fecha_nacimiento a string en formato ISO
+                    fecha_nacimiento_str = fecha_nacimiento.isoformat() if fecha_nacimiento else None
                 
-                        # Crear un diccionario con los datos actualizados, incluyendo cliente_id
-                        datos_actualizados = {
-                            "nombre": nombre,
-                            "especie": especie,
-                            "raza": raza,
-                            "fecha_nacimiento": fecha_nacimiento_str,
-                            "edad": edad,
-                            "peso": peso,
-                            "sexo": sexo,
-                            "alergias": alergias,
-                            "condiciones_especiales": condiciones_especiales,
-                            "cliente_id": cliente_id  # Incluir cliente_id en los datos actualizados
-                        }
+                    # Crear un diccionario con los datos actualizados, incluyendo cliente_id
+                    datos_actualizados = {
+                        "nombre": nombre,
+                        "especie": especie,
+                        "raza": raza,
+                        "fecha_nacimiento": fecha_nacimiento_str,
+                        "edad": edad,
+                        "peso": peso,
+                        "sexo": sexo,
+                        "alergias": alergias,
+                        "condiciones_especiales": condiciones_especiales,
+                        "cliente_id": cliente_id  # Incluir cliente_id en los datos actualizados
+                    }
         
-                        # Llamar a la función para actualizar la mascota
-                        actualizar_mascota(mascota_id, datos_actualizados)
+                    # Llamar a la función para actualizar la mascota
+                    actualizar_mascota(st.session_state.mascota_id, datos_actualizados)
 
     with tab5:
         # Eliminar mascota
