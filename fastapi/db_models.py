@@ -81,6 +81,7 @@ class CitaDB(Base):
     motivo = Column(String(200))
     mascota_id = Column(Integer, ForeignKey("mascotas.id"))
     veterinario_id = Column(Integer, ForeignKey("veterinarios.id"))
+    cliente_id = Column(Integer, ForeignKey("clientes.id"))
     estado = Column(String(20))
     notas = Column(String, nullable=True)
     tratamiento_id = Column(Integer, ForeignKey("tratamientos.id"), nullable=True)

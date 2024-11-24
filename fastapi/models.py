@@ -170,6 +170,7 @@ class Cita(BaseModel):
     motivo: constr(min_length=5, max_length=200)
     mascota_id: int
     veterinario_id: int
+    cliente_id: int  # Agregado el atributo cliente_id
     estado: str = Field(pattern='^(pendiente|confirmada|cancelada|completada)$')
     notas: Optional[str] = None
     tratamiento_id: Optional[int] = None
@@ -201,6 +202,7 @@ class CitaCreate(BaseModel):
     estado: str = Field(pattern='^(pendiente|confirmada|cancelada|completada)$')
     notas: Optional[str] = None
     tratamiento_id: Optional[int] = None
+    cliente_id: int 
 
     @validator('fecha')
     def validar_fecha_futura(cls, v):

@@ -31,6 +31,18 @@ def load_clientes():
         st.error(f"Error de conexión: {str(e)}")
         return []
 
+def load_mascotas(cliente_id):
+    try:
+        response = requests.get(f"{API_URL}/mascotas/cliente/{cliente_id}")
+        if response.status_code == 200:
+            return response.json()
+        else:
+            st.error(f"Error al cargar mascotas: {response.status_code}")
+            return []
+    except requests.exceptions.RequestException as e:
+        st.error(f"Error de conexión: {str(e)}")
+        return []
+
 def load_veterinarios():
     try:
         response = requests.get(f"{API_URL}/veterinarios/")
@@ -65,6 +77,7 @@ def load_tratamientos():
     except requests.exceptions.RequestException as e:
         st.error(f"Error de conexión: {str(e)}")
         return []
+
 st.title("Gestión de Citas")
 
 # Tabs para organizar la interfaz
@@ -124,6 +137,11 @@ with tab2:
         cliente_id = st.selectbox("Cliente", options=list(cliente_options.keys()))
         veterinario_id = st.selectbox("Veterinario", options=list(veterinario_options.keys()))
         
+        # Cargar mascotas del cliente seleccionado
+        mascotas = load_mascotas(cliente_options[cliente_id])
+        mascota_options = {f"{m['nombre']}": m['id'] for m in mascotas}
+        mascota_id = st.selectbox("Mascota", options=list(mascota_options.keys()))
+        
         # Fecha y hora
         fecha = st.date_input(
             "Fecha",
@@ -139,7 +157,7 @@ with tab2:
         
         submitted = st.form_submit_button("Programar Cita")
         if submitted:
-            if not cliente_id or not veterinario_id or not fecha or not hora or not motivo:
+            if not cliente_id or not veterinario_id or not mascota_id or not fecha or not hora or not motivo:
                 st.error("Por favor, complete todos los campos requeridos")
             else:
                 # Convertir fecha y hora a formato ISO
@@ -152,6 +170,7 @@ with tab2:
                         json={
                             "cliente_id": cliente_options[cliente_id],
                             "veterinario_id": veterinario_options[veterinario_id],
+                            "mascota_id": mascota_options[mascota_id],
                             "fecha": fecha_hora_iso,
                             "motivo": motivo,
                             "notas": notas,
