@@ -1,24 +1,31 @@
 import streamlit as st
 import requests
 from datetime import datetime, timedelta
-import pytz
 import os
 
 # URL base de la API
 API_URL = os.getenv('API_URL', 'http://localhost:8000')
 
-def load_citas(estado=None):
+def load_citas_con_clientes():
     try:
-        response = requests.get(f"{API_URL}/citas/")
+        response = requests.get(f"{API_URL}/citas/con-clientes/")
         if response.status_code == 200:
-            citas = response.json()
-            # Filtrar las citas por estado si se proporciona
-            if estado and estado != "Todas":
-                citas = [cita for cita in citas if cita['estado'] == estado]
-            return citas
+            return response.json()
         else:
             st.error(f"Error al cargar citas: {response.status_code}")
             return []
+    except requests.exceptions.RequestException as e:
+        st.error(f"Error de conexión: {str(e)}")
+        return []
+
+def load_citas(estado=None):
+    try:
+        if estado and estado != "Todas":
+            citas_con_clientes = load_citas_con_clientes()
+            citas_filtradas = [(cita, cliente) for cita, cliente in citas_con_clientes if cita['estado'] == estado]
+            return citas_filtradas
+        else:
+            return load_citas_con_clientes()
     except requests.exceptions.RequestException as e:
         st.error(f"Error de conexión: {str(e)}")
         return []
@@ -69,6 +76,23 @@ def cancelar_cita(cita_id):
     except requests.exceptions.RequestException as e:
         st.error(f"Error al cancelar la cita: {str(e)}")
         return False
+def aceptar_cita(cita_id):
+    """Aceptar una cita y cambiar su estado a Confirmada."""
+    try:
+        response = requests.put(f"{API_URL}/citas/{cita_id}", json={"estado": "confirmada"})
+        return response.status_code == 200
+    except requests.exceptions.RequestException as e:
+        st.error(f"Error al aceptar la cita: {str(e)}")
+        return False
+
+def completar_cita(cita_id):
+    """Completar una cita y cambiar su estado a Completada."""
+    try:
+        response = requests.put(f"{API_URL}/citas/{cita_id}", json={"estado": "completada"})
+        return response.status_code == 200
+    except requests.exceptions.RequestException as e:
+        st.error(f"Error al completar la cita: {str(e)}")
+        return False
 
 def load_tratamientos():
     try:
@@ -103,27 +127,54 @@ with tab1:
 
     # Cargar y mostrar citas
     citas = load_citas(estado=estado_filtro)
-    if citas:
-        st.write("### Lista de Citas")
-        for cita in citas:
-            with st.expander(f"Cita {cita['id']} - {cita['fecha']}"):
-                col1, col2, col3 = st.columns(3)
-                with col1:
-                    st.write(f"**Cliente:** {cita.get('cliente_nombre', 'N/A')}")
-                    st.write(f"**Veterinario:** {cita.get('veterinario_nombre', 'N/A')}")
-                with col2:
-                    st.write(f"**Fecha:** {cita.get('fecha', 'N/A')}")
-                    st.write(f"**Estado:** {cita.get('estado', 'Pendiente')}")
-                with col3:
-                    if cita['estado'] not in ['cancelada', 'completada']:
-                        if st.button("Cancelar", key=f"cancel_{cita['id']}"):
-                            if cancelar_cita(cita['id']):
-                                st.success("Cita cancelada exitosamente")
-                                st.rerun()
-                            else:
-                                st.error("Error al cancelar la cita")
-    else:
-        st.info("No hay citas programadas")
+if citas:
+    st.write("### Lista de Citas")
+    for cita, cliente in citas:
+        with st.expander(f"Cita {cita['id']} - {cita['fecha']}"):
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.write(f"**Cliente:** {cliente['nombre']} {cliente['apellido']}")
+                st.write(f"**Veterinario ID:** {cita.get('veterinario_id', 'N/A')}")
+            with col2:
+                st.write(f"**Fecha:** {cita.get('fecha', 'N/A')}")
+                st.write(f"**Estado:** {cita.get('estado', 'Pendiente')}")
+            with col3:
+                # Lógica para mostrar botones según el estado de la cita
+                if cita['estado'] == 'pendiente':
+                    if st.button("Aceptar", key=f"accept_{cita['id']}"):
+                        # Lógica para aceptar la cita (cambiar estado a Confirmada)
+                        if aceptar_cita(cita['id']):
+                            st.success("Cita aceptada exitosamente")
+                            st.rerun()
+                        else:
+                            st.error("Error al aceptar la cita")
+                    
+                    if st.button("Cancelar", key=f"cancel_{cita['id']}"):
+                        if cancelar_cita(cita['id']):
+                            st.success("Cita cancelada exitosamente")
+                            st.rerun()
+                        else:
+                            st.error("Error al cancelar la cita")
+
+                elif cita['estado'] == 'confirmada':
+                    if st.button("Cancelar", key=f"cancel_{cita['id']}"):
+                        if cancelar_cita(cita['id']):
+                            st.success("Cita cancelada exitosamente")
+                            st.rerun()
+                        else:
+                            st.error("Error al cancelar la cita")
+
+                    if st.button("Completar", key=f"complete_{cita['id']}"):
+                        # Lógica para completar la cita (cambiar estado a Completada)
+                        if completar_cita(cita['id']):
+                            st.success("Cita completada exitosamente")
+                            st.rerun()
+                        else:
+                            st.error("Error al completar la cita")
+
+                # No se muestran botones para estados Cancelada o Completada
+else:
+    st.info("No hay citas programadas")
 
 with tab2:
     st.subheader("Programar Nueva Cita")

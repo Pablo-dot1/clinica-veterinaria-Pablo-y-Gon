@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends, Response, Query
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List,Tuple
 from datetime import datetime
 from models import (
     Cliente, Cita, CitaCreate, CitaUpdate, Veterinario, VeterinarioCreate, ClienteCreate,
@@ -767,3 +767,8 @@ async def get_mascotas(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error interno del servidor"
         )
+#join
+@router.get("/citas/con-clientes/", response_model=List[Tuple[Cita, Cliente]])
+async def get_citas_con_clientes(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    """Obtener citas junto con información de clientes."""
+    return crud.get_citas_con_clientes(db, skip=skip, limit=limit)

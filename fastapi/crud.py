@@ -707,3 +707,36 @@ def create_tratamiento(db: Session, tratamiento: models.TratamientoCreate) -> Tr
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error al crear el tratamiento en la base de datos"
         )
+#joins
+def get_citas_con_clientes(db: Session, skip: int = 0, limit: int = 100):
+    """Obtener citas junto con la información del cliente asociado."""
+    try:
+        return db.query(CitaDB, ClienteDB).join(ClienteDB).offset(skip).limit(limit).all()
+    except SQLAlchemyError as e:
+        logger.error(f"Error al obtener citas con clientes: {str(e)}")
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error al obtener las citas con los clientes"
+        )
+def aceptar_cita(db: Session, cita_id: int):
+    """Cambiar el estado de la cita a 'confirmada'."""
+    cita = db.query(CitaDB).filter(CitaDB.id == cita_id).first()
+    if not cita:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cita no encontrada")
+    
+    cita.estado = "confirmada"
+    db.commit()
+    db.refresh(cita)
+    return cita
+
+def completar_cita(db: Session, cita_id: int):
+    """Cambiar el estado de la cita a 'completada'."""
+    cita = db.query(CitaDB).filter(CitaDB.id == cita_id).first()
+    if not cita:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cita no encontrada")
+    
+    cita.estado = "completada"
+    db.commit()
+    db.refresh(cita)
+    return cita
