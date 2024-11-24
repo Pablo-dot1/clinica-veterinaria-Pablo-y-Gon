@@ -91,7 +91,24 @@ def get_veterinarios(db: Session, skip: int = 0, limit: int = 100):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error al obtener la lista de veterinarios"
         )
-
+def get_veterinario(db: Session, veterinario_id: int):
+    """
+    Obtener un veterinario por su ID
+    """
+    try:
+        veterinario = db.query(VeterinarioDB).filter(VeterinarioDB.id == veterinario_id).first()
+        if not veterinario:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Veterinario con ID {veterinario_id} no encontrado"
+            )
+        return veterinario
+    except SQLAlchemyError as e:
+        logger.error(f"Error al obtener veterinario {veterinario_id}: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error al acceder a la base de datos"
+        )
 def create_cliente(db: Session, cliente: models.ClienteCreate):
     """
     Crear un nuevo cliente con validaciones mejoradas
@@ -632,9 +649,10 @@ def create_vacuna(db: Session, mascota_id: int, vacuna: models.VacunaCreate):
     Crear un nuevo registro de vacuna para una mascota
     """
     try:
+        # Crear la instancia de VacunaDB, asegurando que mascota_id se pase correctamente
         db_vacuna = VacunaDB(
-            **vacuna.dict(),
-            mascota_id=mascota_id
+            mascota_id=mascota_id,  # Asegúrate de que esto esté presente
+            **vacuna.dict()  # Esto incluirá todos los demás campos de vacuna
         )
         db.add(db_vacuna)
         db.commit()

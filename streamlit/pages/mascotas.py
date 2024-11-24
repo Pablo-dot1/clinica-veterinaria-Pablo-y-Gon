@@ -110,7 +110,7 @@ def main():
     st.title("🐾 Gestión de Mascotas")
     
     # Crear pestañas para las diferentes opciones
-    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["Registrar Mascota", "Lista de Mascotas", "Buscar Mascota", "Modificar Mascota", "Eliminar Mascota", "Vacunas"])
+    tab1, tab2, tab3, tab4, tab5,  = st.tabs(["Registrar Mascota", "Lista de Mascotas", "Buscar Mascota", "Modificar Mascota", "Eliminar Mascota"])
 
     with tab1:
         st.header("Registrar Mascota")
@@ -233,9 +233,7 @@ def main():
         if st.button("Eliminar"):
             eliminar_mascota(mascota_id)
     
-    with tab6:
-        st.header("Vacunas")
-        st.write("Aquí gestionaremos las vacunas para las mascotas.")
+
     
 if __name__ == "__main__":
     main()

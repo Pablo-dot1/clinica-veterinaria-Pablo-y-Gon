@@ -133,7 +133,6 @@ class Vacuna(BaseModel):
     notas: Optional[str] = None
 
 class VacunaCreate(BaseModel):
-    mascota_id: int
     nombre_vacuna: constr(min_length=2, max_length=100)
     fecha_aplicacion: datetime
     fecha_proxima: datetime
