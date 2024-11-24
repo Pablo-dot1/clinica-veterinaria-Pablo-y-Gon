@@ -93,35 +93,6 @@ def eliminar_mascota(mascota_id):
         st.error(f"Error de conexión: {str(e)}")
         return False
 
-def get_historial_medico(mascota_id):
-    """Obtener historial médico de una mascota"""
-    try:
-        response = requests.get(f"{API_URL}/mascotas/{mascota_id}/historial")
-        if response.status_code == 200:
-            return response.json()
-        else:
-            st.error("Error al obtener el historial médico")
-            return []
-    except requests.exceptions.RequestException as e:
-        st.error(f"Error de conexión: {str(e)}")
-        return []
-
-def registrar_vacuna(mascota_id, datos_vacuna):
-    """Registrar una nueva vacuna"""
-    try:
-        response = requests.post(
-            f"{API_URL}/mascotas/{mascota_id}/vacunas",
-            json=datos_vacuna
-        )
-        if response.status_code == 201:
-            st.success("Vacuna registrada exitosamente")
-            return True
-        else:
-            st.error("Error al registrar la vacuna")
-            return False
-    except requests.exceptions.RequestException as e:
-        st.error(f"Error de conexión: {str(e)}")
-        return False
 def load_mascotas():
     """Cargar todas las mascotas desde la API."""
     try:
@@ -139,14 +110,14 @@ def main():
     st.title("🐾 Gestión de Mascotas")
     
     # Crear pestañas para las diferentes opciones
-    tab1, tab2, tab3, tab4, tab5 = st.tabs(["Registrar Mascota", "Lista de Mascotas", "Buscar Mascota", "Historial Médico", "Vacunas"])
+    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["Registrar Mascota", "Lista de Mascotas", "Buscar Mascota", "Modificar Mascota", "Eliminar Mascota", "Vacunas"])
 
     with tab1:
         st.header("Registrar Mascota")
         cliente_id = st.text_input("ID del Cliente")
         nombre = st.text_input("Nombre de la Mascota")
         especie = st.selectbox("Especie", ["Perro", "Gato", "Otro"])
-        raza = st.text_input("Raza")
+        raza = st .text_input("Raza")
         fecha_nacimiento = st.date_input("Fecha de Nacimiento")
         edad = st.number_input("Edad (años)", min_value=0)
         peso = st.number_input("Peso (kg)", min_value=0.0)
@@ -162,9 +133,8 @@ def main():
         mascotas = load_mascotas()
         
         if mascotas:
-            # Crear un DataFrame de pandas para mostrar las mascotas
             df_mascotas = pd.DataFrame(mascotas)
-            st.dataframe(df_mascotas)  # Mostrar la tabla de mascotas
+            st.dataframe(df_mascotas)
         else:
             st.info("No hay mascotas registradas")  
 
@@ -179,36 +149,8 @@ def main():
                 if mascotas:
                     for mascota in mascotas:
                         st.write(f"ID: {mascota['id']}, Nombre: {mascota['nombre']}")
-                        if st.button(f"Modificar {mascota['nombre']}"):
-                            # Formulario para modificar la mascota
-                            with st.form(key=f"modificar_{mascota['id']}"):
-                                nombre = st.text_input("Nombre", value=mascota['nombre'])
-                                especie = st.selectbox("Especie", ["Perro", "Gato", "Otro"], index=["Perro", "Gato", "Otro"].index(mascota['especie']))
-                                raza = st.text_input("Raza", value=mascota['raza'])
-                                fecha_nacimiento = st.date_input("Fecha de Nacimiento", value=pd.to_datetime(mascota['fecha_nacimiento']).date())
-                                edad = st.number_input("Edad (años)", min_value=0, value=mascota['edad'])
-                                peso = st.number_input("Peso (kg)", min_value=0.0, value=mascota['peso'])
-                                sexo = st.selectbox("Sexo", ["M", "H"], index=["M", "H"].index(mascota['sexo']))
-                                alergias = st.text_input("Alergias (opcional)", value=mascota.get('alergias', ""))
-                                condiciones_especiales = st.text_input("Condiciones Especiales (opcional)", value=mascota.get('condiciones_especiales', ""))
-                                
-                                if st.form_submit_button("Actualizar"):
-                                    datos_actualizados = {
-                                        "nombre": nombre,
-                                        "especie": especie,
-                                        "raza": raza,
-                                        "fecha_nacimiento": fecha_nacimiento.isoformat(),
-                                        "edad": edad,
-                                        "peso": peso,
-                                        "sexo": sexo,
-                                        "alergias": alergias,
-                                        "condiciones_especiales": condiciones_especiales
-                                    }
-                                    actualizar_mascota(mascota['id'], datos_actualizados)
-
-                        if st.button(f"Eliminar {mascota['nombre']}"):
-                            if st.checkbox(f"¿Está seguro de que desea eliminar {mascota['nombre']}?"):
-                                eliminar_mascota(mascota['id'])
+                else:
+                    st.info("No se encontraron mascotas para este cliente.")
 
         elif search_option == "ID de Mascota":
             mascota_id = st.text_input("Ingrese el ID de la Mascota")
@@ -216,42 +158,59 @@ def main():
                 mascota = get_mascota_details(mascota_id)
                 if mascota:
                     st.write(f"Nombre: {mascota['nombre']}, Especie: {mascota['especie']}")
-                    if st.button("Modificar"):
-                        # Formulario para modificar la mascota
-                        with st.form(key=f"modificar_{mascota['id']}"):
-                            nombre = st.text_input("Nombre", value=mascota['nombre'])
-                            especie = st.selectbox("Especie", ["Perro", "Gato", "Otro"], index=["Perro", "Gato", "Otro"].index(mascota['especie']))
-                            raza = st.text_input("Raza", value=mascota['raza'])
-                            fecha_nacimiento = st.date_input("Fecha de Nacimiento", value=pd.to_datetime(mascota['fecha_nacimiento']).date())
-                            edad = st.number_input("Edad (años)", min_value=0, value=mascota['edad'])
-                            peso = st.number_input("Peso (kg)", min_value=0.0, value=mascota['peso'])
-                            sexo = st.selectbox("Sexo", ["M", "H"], index=["M", "H"].index(mascota['sexo']))
-                            alergias = st.text_input("Alergias (opcional)", value=mascota.get('alergias', ""))
-                            condiciones_especiales = st.text_input("Condiciones Especiales (opcional)", value=mascota.get('condiciones_especiales', ""))
-                            
-                            if st.form_submit_button("Actualizar"):
-                                datos_actualizados = {
-                                    "nombre": nombre,
-                                    "especie": especie,
-                                    "raza": raza,
-                                    "fecha_nacimiento": fecha_nacimiento.isoformat(),
-                                    "edad": edad,
-                                    "peso": peso,
-                                    "sexo": sexo,
-                                    "alergias": alergias,
-                                    "condiciones_especiales": condiciones_especiales
-                                }
-                                actualizar_mascota(mascota['id'], datos_actualizados)
-
-                    if st.button("Eliminar"):
-                        if st.checkbox(f"¿Está seguro de que desea eliminar {mascota['nombre']}?"):
-                            eliminar_mascota(mascota['id'])
+                else:
+                    st.info("No se encontró la mascota.")
 
     with tab4:
-        st.header("Historial Médico")
-        # Aquí puedes implementar la lógica para mostrar el historial médico de una mascota
-
+        # Formulario para actualizar mascota
+        st.write("### Actualizar Mascota")
+        with st.form("actualizar_mascota_form"):
+            mascota_id = st.number_input("ID de la Mascota", min_value=1, step=1)
+            nombre = st.text_input("Nuevo Nombre")
+            especie = st.selectbox("Nueva Especie", ["Perro", "Gato", "Otro"])
+            raza = st.text_input("Nueva Raza")
+            fecha_nacimiento = st.date_input("Nueva Fecha de Nacimiento", value=None)  # Campo para fecha de nacimiento
+            edad = st.number_input("Nueva Edad (años)", min_value=0)
+            peso = st.number_input("Nuevo Peso (kg)", min_value=0.0)
+            sexo = st.selectbox("Nuevo Sexo", ["M", "H"])
+            alergias = st.text_input("Nuevas Alergias (opcional)")
+            condiciones_especiales = st.text_input("Nuevas Condiciones Especiales (opcional)")
+        
+            submitted = st.form_submit_button("Actualizar Mascota")
+            if submitted:
+                if not nombre or not especie or not raza or not edad or not peso or not sexo:
+                    st.error("Por favor, complete todos los campos requeridos")
+                else:
+                    # Convertir fecha_nacimiento a string en formato ISO
+                    fecha_nacimiento_str = fecha_nacimiento.isoformat() if fecha_nacimiento else None
+                
+                    # Crear un diccionario con los datos actualizados
+                    datos_actualizados = {
+                        "nombre": nombre,
+                        "especie": especie,
+                        "raza": raza,
+                        "fecha_nacimiento": fecha_nacimiento_str,  # Asegúrate de que esto sea una cadena
+                        "edad": edad,
+                        "peso": peso,
+                        "sexo": sexo,
+                        "alergias": alergias,
+                        "condiciones_especiales": condiciones_especiales
+                    }
+                
+                    # Llamar a la función de actualización
+                    if actualizar_mascota(mascota_id, datos_actualizados):
+                        st.success("Mascota actualizada exitosamente")
+                        st.rerun()
+                    else:
+                        st.error("Error al actualizar la mascota")
     with tab5:
+        st.header("Eliminar Mascota")
+        mascota_id = st.text_input("Ingrese el ID de la Mascota a eliminar")
+        if st.button("Eliminar"):
+            if st.checkbox(f"¿Está seguro de que desea eliminar la mascota con ID {mascota_id}?"):
+                eliminar_mascota(mascota_id)
+
+    with tab6:
         st.header("Vacunas")
         # Aquí puedes implementar la lógica para registrar y mostrar las vacunas de una mascota
 
