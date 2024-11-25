@@ -5,8 +5,8 @@ from fastapi import HTTPException, status
 import models
 from db_models import (
     ClienteDB, VeterinarioDB, MascotaDB, HistorialMedicoDB,
-    VacunaDB, CitaDB, TratamientoDB, MedicamentoDB,
-    ProductoDB, FacturaDB, ReviewDB
+    VacunaDB, CitaDB, TratamientoDB,
+    ProductoDB,
 )
 from datetime import datetime
 import logging

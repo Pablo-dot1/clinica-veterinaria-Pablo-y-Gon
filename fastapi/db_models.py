@@ -97,18 +97,7 @@ class TratamientoDB(Base):
     indicaciones = Column(String, nullable=True)
     contraindicaciones = Column(String, nullable=True)
 
-class MedicamentoDB(Base):
-    __tablename__ = "medicamentos"
 
-    id = Column(Integer, primary_key=True, index=True)
-    nombre = Column(String(100))
-    descripcion = Column(String(500))
-    precio = Column(Float)
-    stock = Column(Integer)
-    laboratorio = Column(String(100))
-    principio_activo = Column(String(100))
-    requiere_receta = Column(Boolean)
-    fecha_caducidad = Column(DateTime)
 
 class ProductoDB(Base):
     __tablename__ = "productos"
@@ -121,24 +110,5 @@ class ProductoDB(Base):
     categoria = Column(String(50))
     proveedor = Column(String(100), nullable=True)
 
-class FacturaDB(Base):
-    __tablename__ = "facturas"
 
-    id = Column(Integer, primary_key=True, index=True)
-    cliente_id = Column(Integer, ForeignKey("clientes.id"))
-    fecha = Column(DateTime)
-    total = Column(Float)
-    estado = Column(String(20))
-    metodo_pago = Column(String(20))
-    items = Column(String)  # Almacenará JSON serializado
 
-class ReviewDB(Base):
-    __tablename__ = "reviews"
-
-    id = Column(Integer, primary_key=True, index=True)
-    cliente_id = Column(Integer, ForeignKey("clientes.id"))
-    calificacion = Column(Integer)
-    comentario = Column(String(500))
-    fecha = Column(DateTime)
-    veterinario_id = Column(Integer, ForeignKey("veterinarios.id"), nullable=True)
-    servicio_evaluado = Column(String(100), nullable=True)
