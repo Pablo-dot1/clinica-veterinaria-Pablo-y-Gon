@@ -305,4 +305,6 @@ class Producto(BaseModel):
 
     class Config:
         from_attributes = True
-
+class ProductoCreate(Producto):
+    class Config:
+        from_attributes = True

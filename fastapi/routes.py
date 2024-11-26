@@ -305,6 +305,24 @@ async def delete_cita(cita_id: int, db: Session = Depends(get_db)):
         )
 
 # Rutas para Productos
+@router.delete("/productos/{producto_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_producto(producto_id: int, db: Session = Depends(get_db)):
+    """
+    Eliminar un producto
+    """
+    try:
+        if not crud.delete_producto(db, producto_id):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Producto no encontrado"
+            )
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
+    except SQLAlchemyError as e:
+        logger.error(f"Error de base de datos al eliminar producto {producto_id}: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error al eliminar el producto"
+        )
 @router.get("/productos/", response_model=List[Producto])
 async def get_productos(
     skip: int = Query(0, ge=0, description="Número de registros a saltar"),
@@ -341,19 +359,19 @@ async def create_producto(producto: Producto, db: Session = Depends(get_db)):
 @router.put("/productos/{producto_id}", response_model=Producto)
 async def update_producto(
     producto_id: int,
-    stock: int = Query(..., ge=0, description="Nuevo stock del producto"),
+    stock: int = Query(..., ge=0, description="Nuevo stock del producto"),  # Asegúrate de que esto esté bien
     db: Session = Depends(get_db)
 ):
-    """
-    Actualizar el stock de un producto
-    """
-    try:
-        return crud.update_producto_stock(db, producto_id, stock)
-    except SQLAlchemyError as e:
-        logger.error(f"Error de base de datos al actualizar stock: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Error al actualizar el stock"
+    """ 
+    Actualizar el stock de un producto 
+    """ 
+    try: 
+        return crud.update_producto_stock(db, producto_id, stock) 
+    except SQLAlchemyError as e: 
+        logger.error(f"Error de base de datos al actualizar stock: {str(e)}") 
+        raise HTTPException( 
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+            detail="Error al actualizar el stock" 
         )
 
 @router.post("/productos/venta", status_code=status.HTTP_200_OK)

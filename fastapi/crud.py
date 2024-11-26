@@ -334,27 +334,30 @@ def create_producto(db: Session, producto: models.Producto):
             detail="Error al crear el producto"
         )
 
-def update_producto_stock(db: Session, producto_id: int, stock: int):
-    """
-    Actualizar el stock de un producto
-    """
+def update_producto_stock(db: Session, producto_id: int, stock: int) -> ProductoDB:
+    """ 
+    Actualizar el stock de un producto por su ID. 
+    """ 
     try:
+        # Obtener el producto por ID
         producto = db.query(ProductoDB).filter(ProductoDB.id == producto_id).first()
         if not producto:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Producto no encontrado"
             )
+        
+        # Actualizar el stock
         producto.stock = stock
-        db.commit()
-        db.refresh(producto)
-        return producto
+        db.commit()  # Guardar cambios en la base de datos
+        db.refresh(producto)  # Refrescar el objeto para obtener los datos actualizados
+        return producto  # Devolver el producto actualizado
     except SQLAlchemyError as e:
-        logger.error(f"Error al actualizar stock del producto: {str(e)}")
-        db.rollback()
+        logger.error(f"Error al actualizar stock del producto {producto_id}: {str(e)}")
+        db.rollback()  # Revertir cambios en caso de error
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Error al actualizar el stock"
+            detail="Error al actualizar el stock del producto"
         )
 
 def registrar_venta_producto(db: Session, producto_id: int, cantidad: int):
@@ -409,6 +412,23 @@ def validate_producto_stock(db: Session, producto_id: int, cantidad: int):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error al verificar el stock del producto"
         )
+def delete_producto(db: Session, producto_id: int) -> bool:
+    """Eliminar un producto por su ID."""
+    try:
+        db_producto = db.query(ProductoDB).filter(ProductoDB.id == producto_id).first()
+        if not db_producto:
+            return False
+        db.delete(db_producto)
+        db.commit()
+        return True
+    except SQLAlchemyError as e:
+        logger.error(f"Error de base de datos al eliminar producto {producto_id}: {str(e)}")
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error al eliminar el producto de la base de datos"
+        )
+#funciones cliente
 def update_cliente(db: Session, cliente_id: int, cliente: models.ClienteCreate):
     """
     Actualizar un cliente existente.
