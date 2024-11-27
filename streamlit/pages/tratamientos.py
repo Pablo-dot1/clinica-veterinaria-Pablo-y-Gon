@@ -110,7 +110,7 @@ def modificar_tratamiento():
                 st.success("¡Tratamiento modificado correctamente!")
                 st.balloons()
             else:
-                st.error(f"Error al modificar el tratamiento: {respuesta.text}")
+                st.error(f"Error al modificar el tratamiento: {respuesta.text }")
     else:
         st.error("No se encontró el tratamiento especificado")
 
@@ -118,28 +118,29 @@ def modificar_tratamiento():
 def eliminar_tratamiento():
     st.header("Eliminar Tratamiento")
     
-    tratamiento_id = st.number_input("ID del Tratamiento", min_value=1)
+    # Asignar un key único al number_input
+    tratamiento_id = st.number_input("ID del Tratamiento", min_value=1, key="eliminar_tratamiento_id")
     
     if st.button("Eliminar Tratamiento"):
         # Confirmación de eliminación
         if st.checkbox("¿Está seguro de que desea eliminar este tratamiento?"):
             respuesta = requests.delete(f"{API_URL}/tratamientos/{tratamiento_id}")
-            if respuesta.status_code == 200:
+            if respuesta.status_code in [200, 204]:  # Aceptar tanto 200 como 204
                 st.success("Tratamiento eliminado correctamente")
             else:
-                st.error("Error al eliminar el tratamiento")
+                st.error(f"Error al eliminar el tratamiento: {respuesta.text}")  # Mostrar el mensaje de error
 
-# Llamar a las funciones según la opción seleccionada
-opcion = st.selectbox(
-    "Selecciona una acción",
-    ["Ver Tratamientos", "Crear Tratamiento", "Modificar Tratamiento", "Eliminar Tratamiento"]
-)
+# Crear pestañas para las diferentes funciones
+tabs = st.tabs(["Ver Tratamientos", "Crear Tratamiento", "Modificar Tratamiento", "Eliminar Tratamiento"])
 
-if opcion == "Crear Tratamiento":
-    crear_tratamiento()
-elif opcion == "Modificar Tratamiento":
-    modificar_tratamiento()
-elif opcion == "Eliminar Tratamiento":
-    eliminar_tratamiento()
-else:
+with tabs[0]:
     ver_tratamientos()
+
+with tabs[1]:
+    crear_tratamiento()
+
+with tabs[2]:
+    modificar_tratamiento()
+
+with tabs[3]:
+    eliminar_tratamiento()

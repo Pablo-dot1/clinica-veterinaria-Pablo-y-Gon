@@ -727,6 +727,35 @@ def create_tratamiento(db: Session, tratamiento: models.TratamientoCreate) -> Tr
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error al crear el tratamiento en la base de datos"
         )
+def get_tratamiento(db: Session, tratamiento_id: int):
+    """Obtener un tratamiento por su ID."""
+    tratamiento = db.query(TratamientoDB).filter(TratamientoDB.id == tratamiento_id).first()
+    if not tratamiento:
+        raise HTTPException(status_code=404, detail="Tratamiento no encontrado")
+    return tratamiento
+
+def update_tratamiento(db: Session, tratamiento_id: int, tratamiento: models.Tratamiento):
+    """Modificar un tratamiento existente."""
+    db_tratamiento = db.query(TratamientoDB).filter(TratamientoDB.id == tratamiento_id).first()
+    if not db_tratamiento:
+        raise HTTPException(status_code=404, detail="Tratamiento no encontrado")
+    
+    for key, value in tratamiento.dict(exclude_unset=True).items():
+        setattr(db_tratamiento, key, value)
+
+    db.commit()
+    db.refresh(db_tratamiento)
+    return db_tratamiento
+
+def delete_tratamiento(db: Session, tratamiento_id: int):
+    """Eliminar un tratamiento por su ID."""
+    db_tratamiento = db.query(TratamientoDB).filter(TratamientoDB.id == tratamiento_id).first()
+    if not db_tratamiento:
+        raise HTTPException(status_code=404, detail="Tratamiento no encontrado")
+    
+    db.delete(db_tratamiento)
+    db.commit()
+    return True
 #joins
 def get_citas_con_clientes(db: Session, skip: int = 0, limit: int = 100):
     """Obtener citas junto con la información del cliente asociado."""

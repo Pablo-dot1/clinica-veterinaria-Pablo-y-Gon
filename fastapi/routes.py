@@ -447,7 +447,13 @@ async def update_tratamiento(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error al actualizar el tratamiento"
         )
-
+@router.get("/tratamientos/{tratamiento_id}", response_model=Tratamiento)
+async def get_tratamiento(tratamiento_id: int, db: Session = Depends(get_db)):
+    """Obtener un tratamiento por su ID."""
+    tratamiento = crud.get_tratamiento(db, tratamiento_id)
+    if not tratamiento:
+        raise HTTPException(status_code=404, detail="Tratamiento no encontrado")
+    return tratamiento
 @router.delete("/tratamientos/{tratamiento_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_tratamiento(tratamiento_id: int, db: Session = Depends(get_db)):
     """
@@ -468,6 +474,10 @@ async def delete_tratamiento(tratamiento_id: int, db: Session = Depends(get_db))
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error al eliminar el tratamiento"
         )
+@router.put("/tratamientos/{tratamiento_id}", response_model=Tratamiento)
+async def update_tratamiento(tratamiento_id: int, tratamiento: Tratamiento, db: Session = Depends(get_db)):
+    """Modificar un tratamiento existente."""
+    return crud.update_tratamiento(db, tratamiento_id, tratamiento)
 
 # Rutas adicionales para Clientes
 @router.put("/clientes/{cliente_id}", response_model=Cliente)
