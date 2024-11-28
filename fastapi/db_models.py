@@ -113,10 +113,11 @@ class ProductoDB(Base):
 
 
 class FacturaDB(Base):
-    __tablename__ = "facturas"
+    __tablename__ = "facturas tratamientos en citas"
 
     id = Column(Integer, primary_key=True, index=True)
     cita_id = Column(Integer, ForeignKey("citas.id"))
+    cliente_id = Column(Integer, ForeignKey("clientes.id"))
     precio = Column(Float)
     fecha_emision = Column(DateTime, default=datetime.utcnow)
 

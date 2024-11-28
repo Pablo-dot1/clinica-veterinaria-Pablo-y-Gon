@@ -313,6 +313,7 @@ class Factura(BaseModel):
     id: Optional[int] = None
     cita_id: int
     precio: float
+    cliente_id: int
     fecha_emision: Optional[datetime] = None
 
     class Config:

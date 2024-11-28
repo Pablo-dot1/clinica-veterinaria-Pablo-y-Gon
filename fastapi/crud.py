@@ -797,7 +797,7 @@ def completar_cita(db: Session, cita_id: int):
             raise HTTPException(status_code=404, detail="Tratamiento no encontrado")
 
         # Crear la factura
-        db_factura = FacturaDB(cita_id=cita.id, precio=tratamiento.costo)
+        db_factura = FacturaDB(cita_id=cita.id,cliente_id=cita.cliente_id, precio=tratamiento.costo)
         db.add(db_factura)
         db.commit()  # Asegúrate de confirmar los cambios en la factura
         db.refresh(db_factura)  # Refresca la factura para obtener los cambios
