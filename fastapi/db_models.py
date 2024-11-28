@@ -118,7 +118,9 @@ class FacturaDB(Base):
     id = Column(Integer, primary_key=True, index=True)
     cita_id = Column(Integer, ForeignKey("citas.id"))
     cliente_id = Column(Integer, ForeignKey("clientes.id"))
+    tratamiento_id = Column(Integer, ForeignKey("tratamientos.id"))
     precio = Column(Float)
     fecha_emision = Column(DateTime, default=datetime.utcnow)
 
     cita = relationship("CitaDB", back_populates="factura")
+    tratamiento = relationship("TratamientoDB")
