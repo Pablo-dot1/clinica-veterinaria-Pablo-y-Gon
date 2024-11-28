@@ -6,7 +6,7 @@ import models
 from db_models import (
     ClienteDB, VeterinarioDB, MascotaDB, HistorialMedicoDB,
     VacunaDB, CitaDB, TratamientoDB,
-    ProductoDB,
+    ProductoDB,FacturaDB
 )
 from datetime import datetime
 import logging
@@ -780,12 +780,41 @@ def aceptar_cita(db: Session, cita_id: int):
     return cita
 
 def completar_cita(db: Session, cita_id: int):
-    """Cambiar el estado de la cita a 'completada'."""
+    """Cambiar el estado de la cita a 'completada' y crear una factura."""
     cita = db.query(CitaDB).filter(CitaDB.id == cita_id).first()
     if not cita:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cita no encontrada")
-    
+        raise HTTPException(status_code=404, detail="Cita no encontrada")
+
+    # Cambiar el estado de la cita a 'completada'
     cita.estado = "completada"
+    db.commit()  # Asegúrate de confirmar los cambios en la cita
+    db.refresh(cita)  # Refresca la cita para obtener los cambios
+
+    # Crear la factura asociada
+    if cita.tratamiento_id:
+        tratamiento = db.query(TratamientoDB).filter(TratamientoDB.id == cita.tratamiento_id).first()
+        if not tratamiento:
+            raise HTTPException(status_code=404, detail="Tratamiento no encontrado")
+
+        # Crear la factura
+        db_factura = FacturaDB(cita_id=cita.id, precio=tratamiento.costo)
+        db.add(db_factura)
+        db.commit()  # Asegúrate de confirmar los cambios en la factura
+        db.refresh(db_factura)  # Refresca la factura para obtener los cambios
+
+    return cita  # Retornar la cita actualizada
+def create_factura(db: Session, cita_id: int, precio: float) -> FacturaDB:
+    """Crear una nueva factura para una cita."""
+    db_factura = FacturaDB(cita_id=cita_id, precio=precio)
+    db.add(db_factura)
     db.commit()
-    db.refresh(cita)
-    return cita
+    db.refresh(db_factura)
+    return db_factura
+
+def get_facturas(db: Session, skip: int = 0, limit: int = 100) -> List[FacturaDB]:
+    """Obtener una lista de facturas con paginación."""
+    return db.query(FacturaDB).offset(skip).limit(limit).all()
+
+def get_factura(db: Session, factura_id: int) -> FacturaDB:
+    """Obtener una factura por su ID."""
+    return db.query(FacturaDB).filter(FacturaDB.id == factura_id).first()

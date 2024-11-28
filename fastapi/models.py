@@ -308,3 +308,12 @@ class Producto(BaseModel):
 class ProductoCreate(Producto):
     class Config:
         from_attributes = True
+
+class Factura(BaseModel):
+    id: Optional[int] = None
+    cita_id: int
+    precio: float
+    fecha_emision: Optional[datetime] = None
+
+    class Config:
+        orm_mode = True

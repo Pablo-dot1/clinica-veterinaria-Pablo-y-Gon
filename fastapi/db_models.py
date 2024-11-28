@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Integer, String, Float, DateTime, Boolean, ForeignKey
 from sqlalchemy.orm import relationship
 from database import Base
+from datetime import datetime
 
 class ClienteDB(Base):
     __tablename__ = "clientes"
@@ -85,7 +86,7 @@ class CitaDB(Base):
     estado = Column(String(20))
     notas = Column(String, nullable=True)
     tratamiento_id = Column(Integer, ForeignKey("tratamientos.id"), nullable=True)
-
+    factura = relationship("FacturaDB", back_populates="cita", uselist=False)
 class TratamientoDB(Base):
     __tablename__ = "tratamientos"
 
@@ -111,4 +112,12 @@ class ProductoDB(Base):
     proveedor = Column(String(100), nullable=True)
 
 
+class FacturaDB(Base):
+    __tablename__ = "facturas"
 
+    id = Column(Integer, primary_key=True, index=True)
+    cita_id = Column(Integer, ForeignKey("citas.id"))
+    precio = Column(Float)
+    fecha_emision = Column(DateTime, default=datetime.utcnow)
+
+    cita = relationship("CitaDB", back_populates="factura")

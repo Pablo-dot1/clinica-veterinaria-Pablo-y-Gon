@@ -5,7 +5,7 @@ from datetime import datetime
 from models import (
     Cliente, Cita, CitaCreate, CitaUpdate, Veterinario, VeterinarioCreate, ClienteCreate,
     Producto, Tratamiento, Mascota, MascotaCreate, HistorialMedico, Vacuna,
-    HistorialMedicoCreate, VacunaCreate
+    HistorialMedicoCreate, VacunaCreate,Factura
 )
 import crud
 from database import get_db
@@ -276,7 +276,10 @@ async def update_cita(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error interno del servidor"
         )
-
+@router.put("/citas/{cita_id}/completar", response_model=Cita)
+async def completar_cita_endpoint(cita_id: int, db: Session = Depends(get_db)):
+    """Completar una cita y crear la factura asociada."""
+    return crud.completar_cita(db, cita_id)
 @router.delete("/citas/{cita_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_cita(cita_id: int, db: Session = Depends(get_db)):
     """
@@ -800,3 +803,30 @@ async def get_mascotas(
 async def get_citas_con_clientes(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     """Obtener citas junto con información de clientes."""
     return crud.get_citas_con_clientes(db, skip=skip, limit=limit)
+@router.post("/facturas/", response_model=Factura, status_code=status.HTTP_201_CREATED)
+async def create_factura(cita_id: int, db: Session = Depends(get_db)):
+    """Crear una nueva factura para una cita."""
+    # Obtener el costo del tratamiento asociado a la cita
+    cita = crud.get_cita(db, cita_id)
+    if not cita or not cita.tratamiento_id:
+        raise HTTPException(status_code=404, detail="Cita o tratamiento no encontrado")
+    
+    tratamiento = crud.get_tratamiento(db, cita.tratamiento_id)
+    if not tratamiento:
+        raise HTTPException(status_code=404, detail="Tratamiento no encontrado")
+
+    # Crear la factura
+    return crud.create_factura(db, cita_id=cita_id, precio=tratamiento.costo)
+
+@router.get("/facturas/", response_model=List[Factura])
+async def get_facturas(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    """Obtener una lista de facturas con paginación."""
+    return crud.get_facturas(db, skip=skip, limit=limit)
+
+@router.get("/facturas/{factura_id}", response_model=Factura)
+async def get_factura(factura_id: int, db: Session = Depends(get_db)):
+    """Obtener una factura por su ID."""
+    factura = crud.get_factura(db, factura_id)
+    if not factura:
+        raise HTTPException(status_code=404, detail="Factura no encontrada")
+    return factura

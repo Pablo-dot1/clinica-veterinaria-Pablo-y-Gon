@@ -88,10 +88,18 @@ def aceptar_cita(cita_id):
 def completar_cita(cita_id):
     """Completar una cita y cambiar su estado a Completada."""
     try:
-        response = requests.put(f"{API_URL}/citas/{cita_id}", json={"estado": "completada"})
-        return response.status_code == 200
+        # Asegúrate de usar la ruta correcta para completar la cita
+        response = requests.put(f"{API_URL}/citas/{cita_id}/completar")
+        
+        if response.status_code == 200:
+            return response.json()  # Retorna la cita completada
+        else:
+            st.error(f"Error al completar la cita: {response.status_code} - {response.text}")
+            print(f"Error al completar la cita: {response.status_code} - {response.text}")  # Imprimir en consola
+            return False
     except requests.exceptions.RequestException as e:
         st.error(f"Error al completar la cita: {str(e)}")
+        print(f"Error de conexión: {str(e)}")  # Imprimir en consola
         return False
 
 def load_tratamientos():
