@@ -43,22 +43,7 @@ class MascotaDB(Base):
     condiciones_especiales = Column(String, nullable=True)
 
     cliente = relationship("ClienteDB", back_populates="mascotas")
-    historial_medico = relationship("HistorialMedicoDB", back_populates="mascota")
     vacunas = relationship("VacunaDB", back_populates="mascota")
-
-class HistorialMedicoDB(Base):
-    __tablename__ = "historial_medico"
-
-    id = Column(Integer, primary_key=True, index=True)
-    mascota_id = Column(Integer, ForeignKey("mascotas.id"))
-    fecha = Column(DateTime)
-    diagnostico = Column(String(500))
-    tratamiento = Column(String(500))
-    notas = Column(String, nullable=True)
-    veterinario_id = Column(Integer, ForeignKey("veterinarios.id"))
-    proxima_revision = Column(DateTime, nullable=True)
-
-    mascota = relationship("MascotaDB", back_populates="historial_medico")
 
 class VacunaDB(Base):
     __tablename__ = "vacunas"

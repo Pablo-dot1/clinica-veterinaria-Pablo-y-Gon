@@ -4,7 +4,7 @@ from typing import List, Optional
 from fastapi import HTTPException, status
 import models
 from db_models import (
-    ClienteDB, VeterinarioDB, MascotaDB, HistorialMedicoDB,
+    ClienteDB, VeterinarioDB, MascotaDB,
     VacunaDB, CitaDB, TratamientoDB,
     ProductoDB,FacturaDB
 )
@@ -613,20 +613,6 @@ def delete_mascota(db: Session, mascota_id: int):
             detail="Error al eliminar la mascota"
         )
 
-def get_historial_medico(db: Session, mascota_id: int):
-    """
-    Obtener el historial médico de una mascota
-    """
-    try:
-        return db.query(HistorialMedicoDB).filter(
-            HistorialMedicoDB.mascota_id == mascota_id
-        ).order_by(HistorialMedicoDB.fecha.desc()).all()
-    except SQLAlchemyError as e:
-        logger.error(f"Error al obtener historial médico: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Error al obtener el historial médico"
-        )
 
 def get_vacunas_mascota(db: Session, mascota_id: int):
     """
@@ -643,26 +629,7 @@ def get_vacunas_mascota(db: Session, mascota_id: int):
             detail="Error al obtener las vacunas"
         )
 
-def create_historial_medico(db: Session, mascota_id: int, historial: models.HistorialMedicoCreate):
-    """
-    Crear un nuevo registro médico para una mascota
-    """
-    try:
-        db_historial = HistorialMedicoDB(
-            **historial.dict(),
-            mascota_id=mascota_id
-        )
-        db.add(db_historial)
-        db.commit()
-        db.refresh(db_historial)
-        return db_historial
-    except SQLAlchemyError as e:
-        logger.error(f"Error al crear historial médico: {str(e)}")
-        db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Error al crear el registro médico"
-        )
+
 
 def create_vacuna(db: Session, mascota_id: int, vacuna: models.VacunaCreate):
     """

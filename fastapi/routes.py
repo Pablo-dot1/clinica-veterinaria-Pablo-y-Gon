@@ -4,8 +4,7 @@ from typing import List,Tuple
 from datetime import datetime
 from models import (
     Cliente, Cita, CitaCreate, CitaUpdate, Veterinario, VeterinarioCreate, ClienteCreate,
-    Producto, Tratamiento, Mascota, MascotaCreate, HistorialMedico, Vacuna,
-    HistorialMedicoCreate, VacunaCreate,Factura
+    Producto, Tratamiento, Mascota, MascotaCreate, Vacuna, VacunaCreate,Factura
 )
 import crud
 from database import get_db
@@ -652,21 +651,7 @@ async def delete_mascota(mascota_id: int, db: Session = Depends(get_db)):
             detail="Error al eliminar la mascota"
         )
 
-@router.get("/mascotas/{mascota_id}/historial", response_model=List[HistorialMedico])
-async def get_historial_medico(mascota_id: int, db: Session = Depends(get_db)):
-    """
-    Obtener el historial médico de una mascota
-    """
-    try:
-        return crud.get_historial_medico(db, mascota_id)
-    except HTTPException:
-        raise
-    except SQLAlchemyError as e:
-        logger.error(f"Error al obtener historial médico: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Error al obtener el historial médico"
-        )
+
 
 @router.get("/mascotas/{mascota_id}/vacunas", response_model=List[Vacuna])
 async def get_vacunas(mascota_id: int, db: Session = Depends(get_db)):
@@ -684,41 +669,7 @@ async def get_vacunas(mascota_id: int, db: Session = Depends(get_db)):
             detail="Error al obtener las vacunas"
         )
 
-@router.post("/mascotas/{mascota_id}/historial", response_model=HistorialMedico, status_code=status.HTTP_201_CREATED)
-async def create_historial_medico(
-    mascota_id: int,
-    historial: HistorialMedicoCreate,
-    db: Session = Depends(get_db)
-):
-    """
-    Crear un nuevo registro médico para una mascota
-    """
-    try:
-        # Verificar que existe la mascota
-        mascota = crud.get_mascota(db, mascota_id)
-        if not mascota:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Mascota con ID {mascota_id} no encontrada"
-            )
-        
-        # Verificar que existe el veterinario
-        veterinario = crud.get_veterinario(db, historial.veterinario_id)
-        if not veterinario:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Veterinario con ID {historial.veterinario_id} no encontrado"
-            )
-        
-        return crud.create_historial_medico(db, mascota_id, historial)
-    except HTTPException:
-        raise
-    except SQLAlchemyError as e:
-        logger.error(f"Error al crear historial médico: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Error al crear el registro médico"
-        )
+
 
 @router.post("/mascotas/{mascota_id}/vacunas", response_model=Vacuna, status_code=status.HTTP_201_CREATED)
 async def create_vacuna(

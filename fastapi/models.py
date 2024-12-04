@@ -85,43 +85,6 @@ class MascotaCreate(Mascota):
     class Config:
         from_attributes = True
 
-class HistorialMedico(BaseModel):
-    id: Optional[int] = None
-    mascota_id: int
-    fecha: datetime
-    diagnostico: constr(min_length=10, max_length=500)
-    tratamiento: constr(min_length=10, max_length=500)
-    notas: Optional[str] = None
-    veterinario_id: int
-    proxima_revision: Optional[datetime] = None
-
-class HistorialMedicoCreate(BaseModel):
-    mascota_id: int
-    fecha: datetime = Field(default_factory=datetime.now)
-    diagnostico: constr(min_length=10, max_length=500)
-    tratamiento: constr(min_length=10, max_length=500)
-    notas: Optional[str] = None
-    veterinario_id: int
-    proxima_revision: Optional[datetime] = None
-
-    @validator('proxima_revision')
-    def validar_proxima_revision(cls, v, values):
-        if v and 'fecha' in values and v <= values['fecha']:
-            raise ValueError('La próxima revisión debe ser posterior a la fecha actual')
-        return v
-
-    class Config:
-        from_attributes = True
-
-    @validator('proxima_revision')
-    def validar_proxima_revision(cls, v, values):
-        if v and 'fecha' in values and v <= values['fecha']:
-            raise ValueError('La próxima revisión debe ser posterior a la fecha actual')
-        return v
-
-    class Config:
-        from_attributes = True
-
 class Vacuna(BaseModel):
     id: Optional[int] = None
     mascota_id: int
