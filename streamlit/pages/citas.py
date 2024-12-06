@@ -183,7 +183,6 @@ if citas:
                 # No se muestran botones para estados Cancelada o Completada
 else:
     st.info("No hay citas programadas")
-
 with tab2:
     st.subheader("Programar Nueva Cita")
     
@@ -192,18 +191,30 @@ with tab2:
     veterinarios = load_veterinarios()
     tratamientos = load_tratamientos()  # Cargar tratamientos si es necesario
     
+    # Selección de cliente
+    cliente_options = {f"{c['nombre']} ({c['email']})": c['id'] for c in clientes}
+    cliente_id = st.selectbox("Cliente", options=list(cliente_options.keys()))
+    
+    # Botón para cargar los datos de las mascotas del cliente seleccionado
+    if st.button("Cargar Mascotas del Cliente"):
+        if cliente_options[cliente_id]:
+            mascotas = load_mascotas(cliente_options[cliente_id])
+            mascota_options = {f"{m['nombre']}": m['id'] for m in mascotas}
+            st.session_state.mascota_options = mascota_options  # Guardar las opciones de mascotas en el estado de la sesión
+            st.success("Mascotas cargadas exitosamente.")
+        else:
+            st.error("Por favor, seleccione un cliente válido.")
+    
     with st.form("nueva_cita_form"):
-        # Selección de cliente y veterinario
-        cliente_options = {f"{c['nombre']} ({c['email']})": c['id'] for c in clientes}
+        # Selección de mascota
+        if 'mascota_options' in st.session_state:
+            mascota_id = st.selectbox("Mascota", options=list(st.session_state.mascota_options.keys()))
+        else:
+            st.warning("Primero, cargue las mascotas del cliente seleccionado.")
+        
+        # Selección de veterinario
         veterinario_options = {f"{v['nombre']}": v['id'] for v in veterinarios}
-        
-        cliente_id = st.selectbox("Cliente", options=list(cliente_options.keys()))
         veterinario_id = st.selectbox("Veterinario", options=list(veterinario_options.keys()))
-        
-        # Cargar mascotas del cliente seleccionado
-        mascotas = load_mascotas(cliente_options[cliente_id])
-        mascota_options = {f"{m['nombre']}": m['id'] for m in mascotas}
-        mascota_id = st.selectbox("Mascota", options=list(mascota_options.keys()))
         
         # Fecha y hora
         fecha = st.date_input(
@@ -233,7 +244,7 @@ with tab2:
                         json={
                             "cliente_id": cliente_options[cliente_id],
                             "veterinario_id": veterinario_options[veterinario_id],
-                            "mascota_id": mascota_options[mascota_id],
+                            "mascota_id": st.session_state.mascota_options[mascota_id],
                             "fecha": fecha_hora_iso,
                             "motivo": motivo,
                             "notas": notas,
@@ -241,7 +252,7 @@ with tab2:
                             "tratamiento_id": tratamiento_id  # Asegúrate de incluir este campo si es necesario
                         }
                     )
-                    
+
                     if response.status_code == 201:
                         st.success("Cita programada exitosamente")
                         st.rerun()
