@@ -103,11 +103,6 @@ class VacunaCreate(BaseModel):
     lote: constr(min_length=4, max_length=50)
     notas: Optional[str] = None
 
-    @validator('fecha_proxima')
-    def validar_fecha_proxima(cls, v, values):
-        if v and 'fecha_aplicacion' in values and v <= values['fecha_aplicacion']:
-            raise ValueError('La fecha próxima debe ser posterior a la fecha de aplicación')
-        return v
 
     class Config:
         from_attributes = True
