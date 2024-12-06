@@ -135,54 +135,54 @@ with tab1:
 
     # Cargar y mostrar citas
     citas = load_citas(estado=estado_filtro)
-if citas:
-    st.write("### Lista de Citas")
-    for cita, cliente in citas:
-        with st.expander(f"Cita {cita['id']} - {cita['fecha']}"):
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                st.write(f"**Cliente:** {cliente['nombre']} {cliente['apellido']}")
-                st.write(f"**Veterinario ID:** {cita.get('veterinario_id', 'N/A')}")
-            with col2:
-                st.write(f"**Fecha:** {cita.get('fecha', 'N/A')}")
-                st.write(f"**Estado:** {cita.get('estado', 'Pendiente')}")
-            with col3:
-                # Lógica para mostrar botones según el estado de la cita
-                if cita['estado'] == 'pendiente':
-                    if st.button("Aceptar", key=f"accept_{cita['id']}"):
-                        # Lógica para aceptar la cita (cambiar estado a Confirmada)
-                        if aceptar_cita(cita['id']):
-                            st.success("Cita aceptada exitosamente")
-                            st.rerun()
-                        else:
-                            st.error("Error al aceptar la cita")
+    if citas:
+        st.write("### Lista de Citas")
+        for cita, cliente in citas:
+            with st.expander(f"Cita {cita['id']} - {cita['fecha']}"):
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.write(f"**Cliente:** {cliente['nombre']} {cliente['apellido']}")
+                    st.write(f"**Veterinario ID:** {cita.get('veterinario_id', 'N/A')}")
+                with col2:
+                    st.write(f"**Fecha:** {cita.get('fecha', 'N/A')}")
+                    st.write(f"**Estado:** {cita.get('estado', 'Pendiente')}")
+                with col3:
+                    # Lógica para mostrar botones según el estado de la cita
+                    if cita['estado'] == 'pendiente':
+                        if st.button("Aceptar", key=f"accept_{cita['id']}"):
+                            # Lógica para aceptar la cita (cambiar estado a Confirmada)
+                            if aceptar_cita(cita['id']):
+                                st.success("Cita aceptada exitosamente")
+                                st.rerun()
+                            else:
+                                st.error("Error al aceptar la cita")
                     
-                    if st.button("Cancelar", key=f"cancel_{cita['id']}"):
-                        if cancelar_cita(cita['id']):
-                            st.success("Cita cancelada exitosamente")
-                            st.rerun()
-                        else:
-                            st.error("Error al cancelar la cita")
+                        if st.button("Cancelar", key=f"cancel_{cita['id']}"):
+                            if cancelar_cita(cita['id']):
+                                st.success("Cita cancelada exitosamente")
+                                st.rerun()
+                            else:
+                                st.error("Error al cancelar la cita")
 
-                elif cita['estado'] == 'confirmada':
-                    if st.button("Cancelar", key=f"cancel_{cita['id']}"):
-                        if cancelar_cita(cita['id']):
-                            st.success("Cita cancelada exitosamente")
-                            st.rerun()
-                        else:
-                            st.error("Error al cancelar la cita")
+                    elif cita['estado'] == 'confirmada':
+                        if st.button("Cancelar", key=f"cancel_{cita['id']}"):
+                            if cancelar_cita(cita['id']):
+                                st.success("Cita cancelada exitosamente")
+                                st.rerun()
+                            else:
+                                st.error("Error al cancelar la cita")
 
-                    if st.button("Completar", key=f"complete_{cita['id']}"):
-                        # Lógica para completar la cita (cambiar estado a Completada)
-                        if completar_cita(cita['id']):
-                            st.success("Cita completada exitosamente")
-                            st.rerun()
-                        else:
-                            st.error("Error al completar la cita")
+                        if st.button("Completar", key=f"complete_{cita['id']}"):
+                            # Lógica para completar la cita (cambiar estado a Completada)
+                            if completar_cita(cita['id']):
+                                st.success("Cita completada exitosamente")
+                                st.rerun()
+                            else:
+                                st.error("Error al completar la cita")
 
                 # No se muestran botones para estados Cancelada o Completada
-else:
-    st.info("No hay citas programadas")
+    else:
+        st.info("No hay citas programadas")
 with tab2:
     st.subheader("Programar Nueva Cita")
     
@@ -255,7 +255,7 @@ with tab2:
 
                     if response.status_code == 201:
                         st.success("Cita programada exitosamente")
-                        st.rerun()
+
                     else:
                         st.error(f"Error al programar la cita: {response.text}")
                 except requests.exceptions.RequestException as e:

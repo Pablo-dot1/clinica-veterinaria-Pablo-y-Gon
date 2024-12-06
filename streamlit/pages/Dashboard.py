@@ -27,8 +27,9 @@ def generar_dashboard():
     citas = get_data("citas")
     productos = get_data("productos")
     clientes = get_data("clientes")
+    mascotas = get_data("mascotas")  # Obtener datos de mascotas
 
-    if not any([citas, productos, clientes]):
+    if not any([citas, productos, clientes, mascotas]):
         st.error("No se pudieron cargar los datos. Por favor, verifica la conexión con el servidor.")
         return
 
@@ -36,20 +37,22 @@ def generar_dashboard():
     st.header("📈 Indicadores Principales")
     total_citas = len(citas)
     total_clientes = len(clientes)
+    total_mascotas = len(mascotas)  # Total de mascotas
+    total_citas_pendientes = len([cita for cita in citas if cita.get('estado') == 'pendiente'])  # Total de citas pendientes
     productos_stock = sum([p.get('stock', 0) for p in productos])
-    productos_bajo_stock = len([p for p in productos if p.get('stock', 0) < 10])
-
-    col1, col2, col3, col4 = st.columns(4)
+    
+    col1, col2, col3, col4, col5, col6 = st.columns(6)
 
     with col1:
         st.metric("Total Citas", total_citas)
     with col2:
         st.metric("Total Clientes", total_clientes)
     with col3:
-        st.metric("Productos en Stock", productos_stock)
+        st.metric("Total Mascotas", total_mascotas)  # Mostrar total de mascotas
     with col4:
-        st.metric("Productos Bajo Stock", productos_bajo_stock)
-
+        st.metric("Citas Pendientes", total_citas_pendientes)  # Mostrar total de citas pendientes
+    with col5:
+        st.metric("Productos en Stock", productos_stock)
     # Gráfico de citas por mes
     st.header("📅 Tendencia de Citas por Mes")
     if citas:
@@ -99,15 +102,7 @@ def generar_dashboard():
     else:
             st.info("No hay citas programadas próximamente")
 
-    # Productos con bajo stock
-    st.header("⚠️ Productos con Stock Bajo")
-    if productos:
-        productos_bajo_stock = [p for p in productos if p.get('stock', 0) < 10]
-        if productos_bajo_stock:
-            df_bajo_stock = pd.DataFrame(productos_bajo_stock)
-            st.dataframe(df_bajo_stock[['nombre', 'stock', 'categoria']])
-        else:
-            st.info("No hay productos con stock bajo.")
+    
 
 # Ejecutar la función para generar el dashboard
 if __name__ == "__main__":
