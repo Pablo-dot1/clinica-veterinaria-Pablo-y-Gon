@@ -1,19 +1,19 @@
 import streamlit as st
 import os
+from PIL import Image  # Importar para cargar y manipular imágenes
 
 # Configuración de la página
 st.set_page_config(
     page_title="Clínica Veterinaria",
-    page_icon="🐾",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Estilos CSS personalizados
+# Estilos CSS personalizados para mejorar la estética
 st.markdown("""
     <style>
     .main {
-        padding: 2.5rem;
+        padding: 2rem 2.5rem;
         background-color: #f8f9fa;
     }
     .stButton>button {
@@ -21,7 +21,7 @@ st.markdown("""
         background-color: #4CAF50;
         color: white;
         border-radius: 8px;
-        padding: 0.5rem;
+        padding: 0.7rem;
         transition: all 0.3s ease;
     }
     .stButton>button:hover {
@@ -44,78 +44,61 @@ st.markdown("""
     .sidebar .sidebar-content {
         background-color: #2c3e50;
     }
+    /* Estilo para los cuadros de texto */
+    .welcome-box {
+        background-color: #e9ecef;
+        padding: 2rem;
+        border-radius: 12px;
+        margin-top: 2rem;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    h2 {
+        color: #34495e;
+        font-size: 2rem;
+    }
+    p {
+        color: #7f8c8d;
+        font-size: 1.1rem;
+        line-height: 1.6;
+    }
+    /* Título de la página */
+    .page-title {
+        background-color: #ffffff;
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        margin-bottom: 1rem;
+    }
     </style>
-    """, unsafe_allow_html=True)
+""", unsafe_allow_html=True)
 
 # Título de la aplicación con mejor formato
 st.markdown("""
-    <div style='background-color: #ffffff; padding: 1.5rem; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);'>
-        <h1 style='text-align: center; color: #34495e; margin-bottom: 0.5rem;'>
-            🏥 Clínica Veterinaria Premium
-        </h1>
-        <p style='text-align: center; color: #7f8c8d; font-size: 1.2rem;'>
-            Cuidando a tus mascotas con amor y profesionalismo
+    <div class='page-title'>
+        <h1 style='text-align: center; color: #34495e;'>Clínica Veterinaria Pablo y Gonzalo</h1>
+    </div>
+""", unsafe_allow_html=True)
+
+# Ruta de la imagen (dentro de la carpeta del proyecto)
+image_path = "imagenes/imagen1.jpg"
+
+# Mostrar la imagen en la aplicación
+st.image(image_path, caption="Clínica Veterinaria", width=1100)  # Ancho ajustado a 1100 píxeles para mejor visualización
+
+# Mensaje de bienvenida orientado al dueño de la clínica
+st.markdown("""
+    <div class='welcome-box'>
+        <h2 style='text-align: center;'>¡Bienvenido a la gestión de la Clínica Veterinaria!</h2>
+        <p style='text-align: center;'>
+            Como dueño de la clínica, tienes acceso a las siguientes funciones para facilitar la administración:
+            <ul style='text-align: left;'>
+                <li>Registrar y gestionar citas para consultas veterinarias</li>
+                <li>Administrar el registro de clientes y sus mascotas</li>
+                <li>Controlar el inventario de productos</li>
+                <li>Gestionar los tratamientos disponibles</li>
+                <li>Visualización de gráficos en Dashboard</li>
+            </ul>
+            Para cualquier consulta no dudes en escribirnos.
         </p>
     </div>
-    """, unsafe_allow_html=True)
-
-# Agregar imagen después del título
-st.image("https://images.pexels.com/photos/45170/kittens-cat-cat-puppy-rush-45170.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1", width=700, caption="Nuestra Clínica")
-
-# Menú lateral mejorado
-with st.sidebar:
-    st.image("https://img.icons8.com/fluency/240/000000/pet-commands-summon.png", width=120)
-    st.markdown("""
-        <div style='background-color: #34495e; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;'>
-            <h3 style='color: white; text-align: center; margin: 0;'>Menú Principal</h3>
-        </div>
-    """, unsafe_allow_html=True)
-    page = st.selectbox(
-        "",  # Eliminamos la etiqueta "Navegación"
-        ["Dashboard", "Clientes", "Citas", "Tratamientos", "Productos"],
-        format_func=lambda x: f"📊 {x}" if x == "Dashboard"
-        else f"👥 {x}" if x == "Clientes"
-        else f"📅 {x}" if x == "Citas"
-        else f"💊 {x}" if x == "Tratamientos"
-        else f"🏷️ {x}"
-    )
-
-# Manejo seguro de importaciones de páginas
-try:
-    if page == "Clientes":
-        if os.path.exists("pages/clientes.py"):
-            import pages.clientes
-        else:
-            st.error("La página de Clientes está en desarrollo")
-    elif page == "Citas":
-        if os.path.exists("pages/citas.py"):
-            import pages.citas
-        else:
-            st.error("La página de Citas está en desarrollo")
-    elif page == "Tratamientos":
-        if os.path.exists("pages/tratamientos.py"):
-            import pages.tratamientos
-        else:
-            st.error("La página de Tratamientos está en desarrollo")
-    elif page == "Productos":
-        if os.path.exists("pages/productos.py"):
-            import pages.productos
-        else:
-            st.error("La página de Productos está en desarrollo")
-    else:
-        if os.path.exists("pages/Dashboard.py"):
-            import pages.Dashboard
-        else:
-            st.error("El Dashboard está en desarrollo")
-except Exception as e:
-    st.error(f"Error al cargar la página: {str(e)}")
-
-# Footer mejorado
-st.markdown("""
-    <div style='background-color: #34495e; padding: 1.5rem; border-radius: 10px; margin-top: 2rem;'>
-        <div style='text-align: center; color: white;'>
-            <p style='margin-bottom: 0.5rem;'>© 2024 Clínica Veterinaria Premium</p>
-            <p style='font-size: 0.9rem; color: #bdc3c7;'>Cuidando la salud de tus mascotas con excelencia</p>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+""", unsafe_allow_html=True)
