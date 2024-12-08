@@ -8,7 +8,7 @@ class Cliente(BaseModel):
     nombre: str = Field(..., min_length=2, max_length=50, strip_whitespace=True)
     apellido: str = Field(..., min_length=2, max_length=50, strip_whitespace=True)
     email: EmailStr
-    telefono: str = Field(..., regex=r'^\+?1?\d{9,15}$')
+    telefono: str = Field(..., pattern=r'^\+?1?\d{9,15}$')
     direccion: str = Field(..., min_length=5, max_length=200, strip_whitespace=True)
 
     @validator('nombre', 'apellido')
@@ -36,7 +36,7 @@ class Veterinario(BaseModel):
     nombre: str = Field(..., min_length=2, max_length=50, strip_whitespace=True)
     apellido: str = Field(..., min_length=2, max_length=50, strip_whitespace=True)
     email: EmailStr
-    telefono: str = Field(..., regex=r'^\+?1?\d{9,15}$')
+    telefono: str = Field(..., pattern=r'^\+?1?\d{9,15}$')
     especialidad: str = Field(..., min_length=3, max_length=100, strip_whitespace=True)
     numero_colegiado: str = Field(..., min_length=4, max_length=20, strip_whitespace=True)
     horario_trabajo: str = Field(..., min_length=5, max_length=200)
@@ -61,7 +61,7 @@ class Mascota(BaseModel):
     raza: str = Field(..., min_length=1, max_length=50)
     edad: int = Field(..., ge=0, le=50)
     peso: float = Field(..., gt=0, le=200)
-    sexo: str = Field(..., regex='^(M|H)$')
+    sexo: str = Field(..., pattern='^(M|H)$')
     cliente_id: int
     fecha_nacimiento: Optional[date] = None
     alergias: Optional[str] = None
@@ -129,7 +129,7 @@ class Cita(BaseModel):
     mascota_id: int
     veterinario_id: int
     cliente_id: int  # Agregado el atributo cliente_id
-    estado: str = Field(..., regex='^(pendiente|confirmada|cancelada|completada)$')
+    estado: str = Field(..., pattern='^(pendiente|confirmada|cancelada|completada)$')
     notas: Optional[str] = None
     tratamiento_id: Optional[int] = None
 
@@ -157,7 +157,7 @@ class CitaCreate(BaseModel):
     motivo: str = Field(..., min_length=5, max_length=200)
     mascota_id: int
     veterinario_id: int
-    estado: str = Field(..., regex='^(pendiente|confirmada|cancelada|completada)$')
+    estado: str = Field(..., pattern='^(pendiente|confirmada|cancelada|completada)$')
     notas: Optional[str] = None
     tratamiento_id: Optional[int] = None
     cliente_id: int 
@@ -174,7 +174,7 @@ class CitaCreate(BaseModel):
 class CitaUpdate(BaseModel):
     fecha: Optional[datetime] = None
     motivo: Optional[str] = Field(None, min_length=5, max_length=200)
-    estado: Optional[str] = Field(None, regex='^(pendiente|confirmada|cancelada|completada)$')
+    estado: Optional[str] = Field(None, pattern='^(pendiente|confirmada|cancelada|completada)$')
     notas: Optional[str] = None
     tratamiento_id: Optional[int] = None
 

@@ -174,7 +174,7 @@ async def create_cliente(cliente: ClienteCreate, db: Session = Depends(get_db)):
 async def get_citas(
     fecha_inicio: datetime = None,
     fecha_fin: datetime = None,
-    estado: str = Query(None, regex="^(pendiente|confirmada|cancelada|completada)$"),
+    estado: str = Query(None, pattern="^(pendiente|confirmada|cancelada|completada)$"),
     db: Session = Depends(get_db)
 ):
     """
