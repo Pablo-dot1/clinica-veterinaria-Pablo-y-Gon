@@ -1,15 +1,15 @@
-from pydantic import BaseModel, EmailStr, Field, constr, validator
+from pydantic import BaseModel, EmailStr, Field, validator
 from typing import Optional, List
 from datetime import datetime, date
 import re
 
 class Cliente(BaseModel):
     id: Optional[int] = None
-    nombre: constr(min_length=2, max_length=50, strip_whitespace=True)
-    apellido: constr(min_length=2, max_length=50, strip_whitespace=True)
+    nombre: str = Field(..., min_length=2, max_length=50, strip_whitespace=True)
+    apellido: str = Field(..., min_length=2, max_length=50, strip_whitespace=True)
     email: EmailStr
-    telefono: str = Field(pattern=r'^\+?1?\d{9,15}$')
-    direccion: constr(min_length=5, max_length=200, strip_whitespace=True)
+    telefono: str = Field(..., regex=r'^\+?1?\d{9,15}$')
+    direccion: str = Field(..., min_length=5, max_length=200, strip_whitespace=True)
 
     @validator('nombre', 'apellido')
     def validar_nombre(cls, v):
@@ -33,13 +33,14 @@ class ClienteCreate(Cliente):
 
 class Veterinario(BaseModel):
     id: Optional[int] = None
-    nombre: constr(min_length=2, max_length=50, strip_whitespace=True)
-    apellido: constr(min_length=2, max_length=50, strip_whitespace=True)
+    nombre: str = Field(..., min_length=2, max_length=50, strip_whitespace=True)
+    apellido: str = Field(..., min_length=2, max_length=50, strip_whitespace=True)
     email: EmailStr
-    telefono: str = Field(pattern=r'^\+?1?\d{9,15}$')
-    especialidad: constr(min_length=3, max_length=100, strip_whitespace=True)
-    numero_colegiado: constr(min_length=4, max_length=20, strip_whitespace=True)
-    horario_trabajo: constr(min_length=5, max_length=200)
+    telefono: str = Field(..., regex=r'^\+?1?\d{9,15}$')
+    especialidad: str = Field(..., min_length=3, max_length=100, strip_whitespace=True)
+    numero_colegiado: str = Field(..., min_length=4, max_length=20, strip_whitespace=True)
+    horario_trabajo: str = Field(..., min_length=5, max_length=200)
+
 class VeterinarioCreate(Veterinario):
     class Config:
         from_attributes = True
@@ -55,12 +56,12 @@ class VeterinarioCreate(Veterinario):
 
 class Mascota(BaseModel):
     id: Optional[int] = None
-    nombre: constr(min_length=1, max_length=50, strip_whitespace=True)
-    especie: constr(min_length=1, max_length=50)
-    raza: constr(min_length=1, max_length=50)
-    edad: int = Field(ge=0, le=50)
-    peso: float = Field(gt=0, le=200)
-    sexo: str = Field(pattern='^(M|H)$')
+    nombre: str = Field(..., min_length=1, max_length=50, strip_whitespace=True)
+    especie: str = Field(..., min_length=1, max_length=50)
+    raza: str = Field(..., min_length=1, max_length=50)
+    edad: int = Field(..., ge=0, le=50)
+    peso: float = Field(..., gt=0, le=200)
+    sexo: str = Field(..., regex='^(M|H)$')
     cliente_id: int
     fecha_nacimiento: Optional[date] = None
     alergias: Optional[str] = None
@@ -88,21 +89,20 @@ class MascotaCreate(Mascota):
 class Vacuna(BaseModel):
     id: Optional[int] = None
     mascota_id: int
-    nombre_vacuna: constr(min_length=2, max_length=100)
+    nombre_vacuna: str = Field(..., min_length=2, max_length=100)
     fecha_aplicacion: datetime
     fecha_proxima: datetime
     veterinario_id: int
-    lote: constr(min_length=4, max_length=50)
+    lote: str = Field(..., min_length=4, max_length=50)
     notas: Optional[str] = None
 
 class VacunaCreate(BaseModel):
-    nombre_vacuna: constr(min_length=2, max_length=100)
+    nombre_vacuna: str = Field(..., min_length=2, max_length=100)
     fecha_aplicacion: datetime
     fecha_proxima: datetime
     veterinario_id: int
-    lote: constr(min_length=4, max_length=50)
+    lote: str = Field(..., min_length=4, max_length=50)
     notas: Optional[str] = None
-
 
     class Config:
         from_attributes = True
@@ -125,11 +125,11 @@ class VacunaCreate(BaseModel):
 class Cita(BaseModel):
     id: Optional[int] = None
     fecha: datetime
-    motivo: constr(min_length=5, max_length=200)
+    motivo: str = Field(..., min_length=5, max_length=200)
     mascota_id: int
     veterinario_id: int
     cliente_id: int  # Agregado el atributo cliente_id
-    estado: str = Field(pattern='^(pendiente|confirmada|cancelada|completada)$')
+    estado: str = Field(..., regex='^(pendiente|confirmada|cancelada|completada)$')
     notas: Optional[str] = None
     tratamiento_id: Optional[int] = None
 
@@ -154,10 +154,10 @@ class Cita(BaseModel):
 
 class CitaCreate(BaseModel):
     fecha: datetime
-    motivo: constr(min_length=5, max_length=200)
+    motivo: str = Field(..., min_length=5, max_length=200)
     mascota_id: int
     veterinario_id: int
-    estado: str = Field(pattern='^(pendiente|confirmada|cancelada|completada)$')
+    estado: str = Field(..., regex='^(pendiente|confirmada|cancelada|completada)$')
     notas: Optional[str] = None
     tratamiento_id: Optional[int] = None
     cliente_id: int 
@@ -173,8 +173,8 @@ class CitaCreate(BaseModel):
 
 class CitaUpdate(BaseModel):
     fecha: Optional[datetime] = None
-    motivo: Optional[constr(min_length=5, max_length=200)] = None
-    estado: Optional[str] = Field(None, pattern='^(pendiente|confirmada|cancelada|completada)$')
+    motivo: Optional[str] = Field(None, min_length=5, max_length=200)
+    estado: Optional[str] = Field(None, regex='^(pendiente|confirmada|cancelada|completada)$')
     notas: Optional[str] = None
     tratamiento_id: Optional[int] = None
 
@@ -189,9 +189,9 @@ class CitaUpdate(BaseModel):
 
 class Tratamiento(BaseModel):
     id: Optional[int] = None
-    nombre: constr(min_length=2, max_length=100)
-    descripcion: constr(min_length=10, max_length=500)
-    costo: float = Field(gt=0)
+    nombre: str = Field(..., min_length=2, max_length=100)
+    descripcion: str = Field(..., min_length=10, max_length=500)
+    costo: float = Field(..., gt=0)
     duracion: Optional[int] = Field(None, ge=1)
     indicaciones: Optional[str] = None
     contraindicaciones: Optional[str] = None
@@ -207,21 +207,20 @@ class Tratamiento(BaseModel):
         if v is not None and v < 1:
             raise ValueError('La duración debe ser al menos 1 día')
         return v
+
 class TratamientoCreate(Tratamiento):
     class Config:
         from_attributes = True
         
-    class Config:
-        from_attributes = True
 
 class Medicamento(BaseModel):
     id: Optional[int] = None
-    nombre: constr(min_length=2, max_length=100)
-    descripcion: constr(min_length=10, max_length=500)
-    precio: float = Field(gt=0)
-    stock: int = Field(ge=0)
-    laboratorio: constr(min_length=2, max_length=100)
-    principio_activo: constr(min_length=2, max_length=100)
+    nombre: str = Field(..., min_length=2, max_length=100)
+    descripcion: str = Field(..., min_length=10, max_length=500)
+    precio: float = Field(..., gt=0)
+    stock: int = Field(..., ge=0)
+    laboratorio: str = Field(..., min_length=2, max_length=100)
+    principio_activo: str = Field(..., min_length=2, max_length=100)
     requiere_receta: bool
     fecha_caducidad: datetime
 
@@ -242,11 +241,11 @@ class Medicamento(BaseModel):
 
 class Producto(BaseModel):
     id: Optional[int] = None
-    nombre: constr(min_length=2, max_length=100)
-    descripcion: constr(min_length=10, max_length=500)
-    precio: float = Field(gt=0)
-    stock: int = Field(ge=0)
-    categoria: constr(max_length=50)
+    nombre: str = Field(..., min_length=2, max_length=100)
+    descripcion: str = Field(..., min_length=10, max_length=500)
+    precio: float = Field(..., gt=0)
+    stock: int = Field(..., ge=0)
+    categoria: str = Field(..., max_length=50)
     proveedor: Optional[str] = None
 
     @validator('precio')
@@ -263,6 +262,7 @@ class Producto(BaseModel):
 
     class Config:
         from_attributes = True
+
 class ProductoCreate(Producto):
     class Config:
         from_attributes = True
