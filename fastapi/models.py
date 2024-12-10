@@ -133,11 +133,6 @@ class Cita(BaseModel):
     notas: Optional[str] = None
     tratamiento_id: Optional[int] = None
 
-    @validator('fecha')
-    def validar_fecha_futura(cls, v):
-        if v < datetime.now():
-            raise ValueError('La fecha de la cita debe ser futura')
-        return v
 
     @validator('estado')
     def validar_estado(cls, v):
@@ -162,11 +157,6 @@ class CitaCreate(BaseModel):
     tratamiento_id: Optional[int] = None
     cliente_id: int 
 
-    @validator('fecha')
-    def validar_fecha_futura(cls, v):
-        if v < datetime.now():
-            raise ValueError('La fecha de la cita debe ser futura')
-        return v
 
     class Config:
         from_attributes = True
@@ -178,11 +168,6 @@ class CitaUpdate(BaseModel):
     notas: Optional[str] = None
     tratamiento_id: Optional[int] = None
 
-    @validator('fecha')
-    def validar_fecha_futura(cls, v):
-        if v and v < datetime.now():
-            raise ValueError('La fecha de la cita debe ser futura')
-        return v
 
     class Config:
         from_attributes = True
@@ -276,4 +261,4 @@ class Factura(BaseModel):
     fecha_emision: Optional[datetime] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True

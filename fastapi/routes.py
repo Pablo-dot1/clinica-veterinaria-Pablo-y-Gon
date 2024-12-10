@@ -214,13 +214,7 @@ async def create_cita(cita: CitaCreate, db: Session = Depends(get_db)):
     Crear una nueva cita
     """
     try:
-        # Validar que la fecha de la cita sea futura
-        if cita.fecha <= datetime.now():
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="La fecha de la cita debe ser futura"
-            )
-
+        # Se ha eliminado la validación de que la fecha de la cita sea futura
         return crud.create_cita(db, cita)
     except HTTPException:
         raise
