@@ -18,7 +18,7 @@ class ClienteDB(Base):
 class VeterinarioDB(Base):
     __tablename__ = "veterinarios"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     nombre = Column(String(50))
     apellido = Column(String(50))
     email = Column(String(100), unique=True, index=True)
@@ -72,6 +72,10 @@ class CitaDB(Base):
     notas = Column(String, nullable=True)
     tratamiento_id = Column(Integer, ForeignKey("tratamientos.id"), nullable=True)
     factura = relationship("FacturaDB", back_populates="cita", uselist=False)
+    mascota = relationship("MascotaDB")
+    veterinario = relationship("VeterinarioDB")
+    cliente = relationship("ClienteDB")
+
 class TratamientoDB(Base):
     __tablename__ = "tratamientos"
 

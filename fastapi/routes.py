@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends, Response, Query
 from sqlalchemy.orm import Session
-from typing import List,Tuple
+from typing import List,Tuple,Optional
 from datetime import datetime
 from models import (
     Cliente, Cita, CitaCreate, CitaUpdate, Veterinario, VeterinarioCreate, ClienteCreate,
@@ -11,6 +11,8 @@ from database import get_db
 from fastapi import status
 import logging
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.exc import IntegrityError
+
 
 # Configuración de logging
 logger = logging.getLogger(__name__)
@@ -65,32 +67,17 @@ async def get_veterinarios(
         )
 
 @router.get("/clientes/", response_model=List[Cliente])
-async def get_clientes(
-    skip: int = Query(0, ge=0, description="Número de registros a saltar"),
-    limit: int = Query(100, ge=1, le=100, description="Límite de registros a retornar"),
-    db: Session = Depends(get_db)
-):
-    """
-    Obtener todos los clientes con paginación
-    """
+async def get_clientes(skip: int = Query(0, ge=0), limit: int = Query(100, ge=1, le=100), db: Session = Depends(get_db)):
+    """ Obtener todos los clientes con paginación """
     try:
-        clientes = crud.get_clientes(db, skip=skip, limit=limit)
-        if not clientes:
-            logger.info("No se encontraron clientes en la base de datos")
-            return []
-        return clientes
+        # Obtener los clientes de la base de datos
+        clientes_db = crud.get_clientes(db, skip=skip, limit=limit)
+        
+        # Convertir a Pydantic
+        return [Cliente.from_orm(cliente) for cliente in clientes_db]  # Asegúrate de usar from_orm
     except SQLAlchemyError as e:
         logger.error(f"Error de base de datos al obtener clientes: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Error al acceder a la base de datos"
-        )
-    except Exception as e:
-        logger.error(f"Error inesperado al obtener clientes: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Error interno del servidor"
-        )
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error al acceder a la base de datos")
 
 @router.get("/clientes/{cliente_id}", response_model=Cliente)
 async def get_cliente_by_id(
@@ -172,13 +159,13 @@ async def create_cliente(cliente: ClienteCreate, db: Session = Depends(get_db)):
 
 @router.get("/citas/", response_model=List[Cita])
 async def get_citas(
-    fecha_inicio: datetime = None,
-    fecha_fin: datetime = None,
-    estado: str = Query(None, pattern="^(pendiente|confirmada|cancelada|completada)$"),
+    fecha_inicio: Optional[datetime] = None,
+    fecha_fin: Optional[datetime] = None,
+    estado: Optional[str] = Query(None, pattern="^(pendiente|confirmada|cancelada|completada)$"),
     db: Session = Depends(get_db)
 ):
     """
-    Obtener todas las citas con filtros opcionales
+    Obtener todas las citas con filtros opcionales.
     """
     try:
         # Validar fechas si se proporcionan
@@ -190,7 +177,7 @@ async def get_citas(
 
         citas = crud.get_citas(db, fecha_inicio=fecha_inicio, fecha_fin=fecha_fin, estado=estado)
         if not citas:
-            logger.info("No se encontraron citas con los criterios especificados")
+            logger.info("No se encontraron citas con los criterios especificados.")
             return []
         return citas
     except SQLAlchemyError as e:
@@ -199,8 +186,6 @@ async def get_citas(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error al acceder a la base de datos"
         )
-    except HTTPException:
-        raise
     except Exception as e:
         logger.error(f"Error inesperado al obtener citas: {str(e)}")
         raise HTTPException(
@@ -516,23 +501,6 @@ async def delete_cliente(cliente_id: int, db: Session = Depends(get_db)):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error al eliminar el cliente"
         )
-@router.post("/veterinarios/", response_model=Veterinario, status_code=status.HTTP_201_CREATED)
-async def create_veterinario(veterinario: VeterinarioCreate, db: Session = Depends(get_db)):
-    """
-    Crear un nuevo veterinario.
-    """
-    try:
-        return crud.create_veterinario(db, veterinario)
-    except HTTPException:
-        raise
-    except SQLAlchemyError as e:
-        logger.error(f"Error de base de datos al crear veterinario: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Error al crear el veterinario en la base de datos"
-        )
-
-# Rutas para Mascotas
 
 
 @router.get("/mascotas/cliente/{cliente_id}", response_model=List[Mascota])
@@ -747,7 +715,31 @@ async def get_mascotas(
 @router.get("/citas/con-clientes/", response_model=List[Tuple[Cita, Cliente]])
 async def get_citas_con_clientes(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     """Obtener citas junto con información de clientes."""
-    return crud.get_citas_con_clientes(db, skip=skip, limit=limit)
+    try:
+        citas_con_clientes = crud.get_citas_con_clientes(db, skip=skip, limit=limit)
+        logger.info(f"Citas con clientes: {citas_con_clientes}")
+
+        if not citas_con_clientes:
+            logger.info("No se encontraron citas con clientes.")
+            return []
+
+        # Transformar los datos a la estructura esperada
+        result = [(Cita.from_orm(cita), Cliente.from_orm(cliente)) for cita, cliente in citas_con_clientes]
+        return result
+    except SQLAlchemyError as e:
+        logger.error(f"Error de base de datos al obtener citas con clientes: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error al acceder a la base de datos"
+        )
+    except Exception as e:
+        logger.error(f"Error inesperado al obtener citas con clientes: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error interno del servidor"
+        )
+
+
 @router.post("/facturas/", response_model=Factura, status_code=status.HTTP_201_CREATED)
 async def create_factura(cita_id: int, db: Session = Depends(get_db)):
     """Crear una nueva factura para una cita."""

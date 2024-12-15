@@ -1,18 +1,21 @@
-# Usa la imagen base de tiangolo/uvicorn-gunicorn-fastapi
-FROM tiangolo/uvicorn-gunicorn-fastapi:python3.9
+# Usar una imagen base de Python optimizada
+FROM python:3.10-slim
 
-# Crea el directorio de trabajo y copia el archivo requirements.txt
-WORKDIR /fastapi
+# Establecer el directorio de trabajo
+WORKDIR /app
+
+# Copiar las dependencias y las instala
 COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Instala las dependencias y psutil directamente
-RUN pip install --no-cache-dir -r requirements.txt && pip install psutil
+# Crear la carpeta de datos para la base de datos SQLite
+RUN mkdir -p ./data
 
-# Copia el resto de los archivos al contenedor
+# Copiar el resto del código
 COPY . .
 
-# Expone el puerto que usará la aplicación
+# Exponer el puerto donde correrá FastAPI
 EXPOSE 8000
 
-# Ejecuta Uvicorn, especificando el módulo y la aplicación, con ajustes para producción
-CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]
+# Comando para iniciar el servidor
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

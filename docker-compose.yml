@@ -1,67 +1,22 @@
 services:
   fastapi:
-    build: fastapi/
+    build:
+      context: ./fastapi
     ports:
-      - "8000:8000"
-    networks:
-      - backend_network
-    container_name: fastapi
+      - "8000:8000" # Mapea el puerto 8000 del contenedor al host
     volumes:
-      - ./fastapi:/app
-      - mis_datos:/app/data
-    environment:
-      - DATABASE_URL=sqlite:///./data/sql_app.db
-      - DATABASE_POOL_SIZE=5
-      - DATABASE_POOL_TIMEOUT=30
-      - LOG_LEVEL=INFO
-    command: uvicorn main:app --host 0.0.0.0 --port 8000 --workers 1 --log-level info --timeout-keep-alive 75
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 15s
-      timeout: 5s
-      retries: 3
-      start_period: 20s
-    deploy:
-      resources:
-        limits:
-          cpus: '1'
-          memory: 512M
-        reservations:
-          cpus: '0.25'
-          memory: 256M
+      - ./fastapi/data:/app/data # Mapea el directorio de la base de datos
+    networks:
+      - backend
 
   streamlit:
-    build: streamlit/
-    depends_on:
-      fastapi:
-        condition: service_healthy
+    build:
+      context: ./streamlit
     ports:
-      - "8501:8501"
+      - "8501:8501" # Mapea el puerto 8501 del contenedor al host
     networks:
-      - backend_network
-    container_name: streamlit
-    volumes:
-      - ./streamlit:/app
-    environment:
-      - API_URL=http://fastapi:8000
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
-      interval: 15s
-      timeout: 5s
-      retries: 3
-      start_period: 20s
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 256M
-        reservations:
-          cpus: '0.1'
-          memory: 128M
+      - backend
 
 networks:
-  backend_network:
+  backend:
     driver: bridge
-    
-volumes:
-   mis_datos:

@@ -4,7 +4,7 @@ import os
 from datetime import datetime
 
 # URL base de la API
-API_URL = os.getenv('API_URL', 'http://localhost:8000')
+API_URL = os.getenv('API_URL', 'http://fastapi:8000')
 
 # Función para crear un nuevo tratamiento
 def crear_tratamiento():

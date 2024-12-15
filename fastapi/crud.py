@@ -11,6 +11,7 @@ from db_models import (
 from datetime import datetime
 import logging
 
+
 # Configuración de logging
 logger = logging.getLogger(__name__)
 
@@ -143,17 +144,8 @@ def create_cliente(db: Session, cliente: models.ClienteCreate):
             detail="Error al crear el cliente en la base de datos"
         )
 
-def get_citas(
-    db: Session,
-    skip: int = 0,
-    limit: int = 100,
-    fecha_inicio: Optional[datetime] = None,
-    fecha_fin: Optional[datetime] = None,
-    estado: Optional[str] = None
-):
-    """
-    Obtener citas con filtros mejorados y validación
-    """
+def get_citas(db: Session, fecha_inicio: Optional[datetime] = None, fecha_fin: Optional[datetime] = None, estado: Optional[str] = None):
+    """Obtener citas con filtros opcionales."""
     try:
         query = db.query(CitaDB)
 
@@ -164,15 +156,17 @@ def get_citas(
         if estado:
             query = query.filter(CitaDB.estado == estado)
 
-        return query.offset(skip).limit(limit).all()
+        citas = query.all()  # Devuelve todas las citas que coinciden con los filtros
+        
+        # Convertir a modelos Pydantic
+        return [models.Cita.from_orm(cita) for cita in citas]  # Asegúrate de que esto devuelva una lista de objetos Cita
     except SQLAlchemyError as e:
         logger.error(f"Error al obtener citas: {str(e)}")
-        db.rollback()
+        db.rollback()  # Asegúrate de revertir cualquier cambio en caso de error
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error al obtener las citas"
-        )
-
+ )
 def create_cita(db: Session, cita: models.CitaCreate):
     """
     Crear una nueva cita con validaciones mejoradas
@@ -479,22 +473,46 @@ def delete_cliente(db: Session, cliente_id: int):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error al eliminar el cliente en la base de datos"
         )
-def create_veterinario(db: Session, veterinario: models.VeterinarioCreate):
     """
-    Crear un nuevo veterinario.
+    Crear un nuevo veterinario con validaciones mejoradas
     """
     try:
+        # Verificar si ya existe un veterinario con el mismo email
+        existing_veterinario = db.query(VeterinarioDB).filter(VeterinarioDB.email == veterinario.email).first()
+        if existing_veterinario:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Ya existe un veterinario con este email"
+            )
+
+        # Verificar si ya existe un veterinario con el mismo número colegiado
+        existing_numero_colegiado = db.query(VeterinarioDB).filter(VeterinarioDB.numero_colegiado == veterinario.numero_colegiado).first()
+        if existing_numero_colegiado:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Ya existe un veterinario con este número colegiado"
+            )
+
+        # Crear una nueva instancia de VeterinarioDB
         db_veterinario = VeterinarioDB(**veterinario.dict())
         db.add(db_veterinario)
         db.commit()
         db.refresh(db_veterinario)
+        logger.info(f"Veterinario creado exitosamente: ID {db_veterinario.id}")
         return db_veterinario
+    except IntegrityError as e:
+        logger.error(f"Error de integridad al crear veterinario: {str(e)}")
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Error de integridad en los datos del veterinario"
+        )
     except SQLAlchemyError as e:
-        logger.error(f"Error al crear veterinario: {str(e)}")
+        logger.error(f"Error de base de datos al crear veterinario: {str(e)}")
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Error al crear el veterinario"
+            detail="Error al crear el veterinario en la base de datos"
         )
 
 def get_mascota(db: Session, mascota_id: int):
@@ -724,16 +742,23 @@ def delete_tratamiento(db: Session, tratamiento_id: int):
     db.commit()
     return True
 #joins
+
 def get_citas_con_clientes(db: Session, skip: int = 0, limit: int = 100):
     """Obtener citas junto con la información del cliente asociado."""
     try:
-        return db.query(CitaDB, ClienteDB).join(ClienteDB).offset(skip).limit(limit).all()
+        citas_con_clientes = (
+            db.query(CitaDB, ClienteDB)
+            .join(ClienteDB)
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
+        return citas_con_clientes
     except SQLAlchemyError as e:
         logger.error(f"Error al obtener citas con clientes: {str(e)}")
-        db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Error al obtener las citas con los clientes"
+            detail="Error al acceder a la base de datos"
         )
 def aceptar_cita(db: Session, cita_id: int):
     """Cambiar el estado de la cita a 'confirmada'."""
@@ -785,3 +810,54 @@ def get_facturas(db: Session, skip: int = 0, limit: int = 100) -> List[FacturaDB
 def get_factura(db: Session, factura_id: int) -> FacturaDB:
     """Obtener una factura por su ID."""
     return db.query(FacturaDB).filter(FacturaDB.id == factura_id).first()
+def cargar_veterinarios_iniciales(db: Session):
+    """
+    Cargar veterinarios iniciales en la base de datos.
+    """
+    veterinarios_iniciales = [
+        {
+            "nombre": "Javier",
+            "apellido": "Maroto",
+            "email": "javimaroto@example.com",
+            "telefono": "8870082711767",
+            "especialidad": "Cirugía General",
+            "numero_colegiado": "COL123456",
+            "horario_trabajo": "Lunes a Viernes, 8am a 6pm"
+        },
+        {
+            "nombre": "Lucía",
+            "apellido": "Fernández",
+            "email": "lucia.fernandez@example.com",
+            "telefono": "1234567890",
+            "especialidad": "Dermatología Veterinaria",
+            "numero_colegiado": "COL654321",
+            "horario_trabajo": "Martes a Sábado, 9am a 5pm"
+        },
+        {
+            "nombre": "Carlos",
+            "apellido": "González",
+            "email": "carlos.gonzalez@example.com",
+            "telefono": "9876543210",
+            "especialidad": "Medicina Interna",
+            "numero_colegiado": "COL789012",
+            "horario_trabajo": "Lunes, Miércoles y Viernes, 10am a 4pm"
+        },
+        {
+            "nombre": "Ana",
+            "apellido": "Pérez",
+            "email": "ana.perez@example.com",
+            "telefono": "1122334455",
+            "especialidad": "Odontología Veterinaria",
+            "numero_colegiado": "COL345678",
+            "horario_trabajo": "Jueves y Viernes, 1pm a 7pm"
+        }
+    ]
+
+    for veterinario in veterinarios_iniciales:
+        # Verificar si ya existe un veterinario con el mismo email
+        existing_veterinario = db.query(VeterinarioDB).filter(VeterinarioDB.email == veterinario["email"]).first()
+        if not existing_veterinario:
+            db_veterinario = VeterinarioDB(**veterinario)
+            db.add(db_veterinario)
+
+    db.commit()  # Confirmar los cambios

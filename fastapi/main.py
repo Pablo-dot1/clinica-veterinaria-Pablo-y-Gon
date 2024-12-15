@@ -2,13 +2,15 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from routes import router
+from database import get_db
+from sqlalchemy.orm import Session
 from database import engine, check_database_connection
 import db_models
 import logging
 import sys
 import os
 import datetime
-
+import crud
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -52,6 +54,11 @@ async def startup_event():
     try:
         check_database_connection()
         logger.info("Database connection verified")
+
+        # Cargar veterinarios iniciales
+        db: Session = next(get_db())
+        crud.cargar_veterinarios_iniciales(db)  # Asegúrate de que esta función esté definida y sea correcta
+        
     except Exception as e:
         logger.error(f"Error during application startup: {str(e)}")
         raise

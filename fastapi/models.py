@@ -25,11 +25,11 @@ class Cliente(BaseModel):
         return v
 
     class Config:
-        from_attributes = True
+        orm_mode = True  # Habilitar el modo ORM
 
 class ClienteCreate(Cliente):
     class Config:
-        from_attributes = True
+        orm_mode = True  # También habilitar en el modelo de creación
 
 class Veterinario(BaseModel):
     id: Optional[int] = None
@@ -41,18 +41,18 @@ class Veterinario(BaseModel):
     numero_colegiado: str = Field(..., min_length=4, max_length=20, strip_whitespace=True)
     horario_trabajo: str = Field(..., min_length=5, max_length=200)
 
+    class Config:
+        orm_mode = True  # Habilitar el modo ORM
+
 class VeterinarioCreate(Veterinario):
     class Config:
-        from_attributes = True
+        orm_mode = True  # También habilitar en el modelo de creación
 
     @validator('numero_colegiado')
     def validar_numero_colegiado(cls, v):
         if not re.match(r'^[A-Z0-9-]+$', v.upper()):
             raise ValueError('Formato de número de colegiado inválido')
         return v.upper()
-
-    class Config:
-        from_attributes = True
 
 class Mascota(BaseModel):
     id: Optional[int] = None
@@ -80,11 +80,12 @@ class Mascota(BaseModel):
         return round(v, 2)
 
     class Config:
-        from_attributes = True
+        orm_mode = True  # Habilitar el modo ORM
 
 class MascotaCreate(Mascota):
     class Config:
-        from_attributes = True
+        orm_mode = True  # También habilitar en el modelo de creación
+
 
 class Vacuna(BaseModel):
     id: Optional[int] = None
@@ -96,16 +97,8 @@ class Vacuna(BaseModel):
     lote: str = Field(..., min_length=4, max_length=50)
     notas: Optional[str] = None
 
-class VacunaCreate(BaseModel):
-    nombre_vacuna: str = Field(..., min_length=2, max_length=100)
-    fecha_aplicacion: datetime
-    fecha_proxima: datetime
-    veterinario_id: int
-    lote: str = Field(..., min_length=4, max_length=50)
-    notas: Optional[str] = None
-
     class Config:
-        from_attributes = True
+        orm_mode = True  # Habilitar el modo ORM
 
     @validator('fecha_proxima')
     def validar_fecha_proxima(cls, v, values):
@@ -119,8 +112,16 @@ class VacunaCreate(BaseModel):
             raise ValueError('Formato de lote inválido')
         return v.upper()
 
+class VacunaCreate(BaseModel):
+    nombre_vacuna: str = Field(..., min_length=2, max_length=100)
+    fecha_aplicacion: datetime
+    fecha_proxima: datetime
+    veterinario_id: int
+    lote: str = Field(..., min_length=4, max_length=50)
+    notas: Optional[str] = None
+
     class Config:
-        from_attributes = True
+        orm_mode = True  # Habilitar el modo ORM
 
 class Cita(BaseModel):
     id: Optional[int] = None
@@ -133,6 +134,8 @@ class Cita(BaseModel):
     notas: Optional[str] = None
     tratamiento_id: Optional[int] = None
 
+    class Config:
+        orm_mode = True  # Habilitar el modo ORM
 
     @validator('estado')
     def validar_estado(cls, v):
@@ -144,9 +147,6 @@ class Cita(BaseModel):
     def puede_eliminar(self) -> bool:
         return self.estado != 'completada'
 
-    class Config:
-        from_attributes = True
-
 class CitaCreate(BaseModel):
     fecha: datetime
     motivo: str = Field(..., min_length=5, max_length=200)
@@ -157,9 +157,8 @@ class CitaCreate(BaseModel):
     tratamiento_id: Optional[int] = None
     cliente_id: int 
 
-
     class Config:
-        from_attributes = True
+        orm_mode = True  # Habilitar el modo ORM
 
 class CitaUpdate(BaseModel):
     fecha: Optional[datetime] = None
@@ -168,9 +167,8 @@ class CitaUpdate(BaseModel):
     notas: Optional[str] = None
     tratamiento_id: Optional[int] = None
 
-
     class Config:
-        from_attributes = True
+        orm_mode = True  # Habilitar el modo ORM
 
 class Tratamiento(BaseModel):
     id: Optional[int] = None
@@ -180,6 +178,8 @@ class Tratamiento(BaseModel):
     duracion: Optional[int] = Field(None, ge=1)
     indicaciones: Optional[str] = None
     contraindicaciones: Optional[str] = None
+    class Config:
+        orm_mode = True  # Habilitar el modo ORM
 
     @validator('costo')
     def validar_costo(cls, v):
@@ -195,7 +195,7 @@ class Tratamiento(BaseModel):
 
 class TratamientoCreate(Tratamiento):
     class Config:
-        from_attributes = True
+        orm_mode = True  # Habilitar el modo ORM
         
 
 class Medicamento(BaseModel):
@@ -222,7 +222,7 @@ class Medicamento(BaseModel):
         return round(v, 2)
 
     class Config:
-        from_attributes = True
+        orm_mode = True  # Habilitar el modo ORM
 
 class Producto(BaseModel):
     id: Optional[int] = None
@@ -246,11 +246,11 @@ class Producto(BaseModel):
         return v
 
     class Config:
-        from_attributes = True
+        orm_mode = True  # Habilitar el modo ORM
 
 class ProductoCreate(Producto):
     class Config:
-        from_attributes = True
+        orm_mode = True  # Habilitar el modo ORM
 
 class Factura(BaseModel):
     id: Optional[int] = None
@@ -259,6 +259,6 @@ class Factura(BaseModel):
     cliente_id: int
     tratamiento_id: int
     fecha_emision: Optional[datetime] = None
-
+    
     class Config:
-        from_attributes = True
+        orm_mode = True  # Habilitar el modo ORM

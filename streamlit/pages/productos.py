@@ -4,7 +4,7 @@ import pandas as pd
 import os
 
 # URL base de la API
-API_URL = os.getenv('API_URL', 'http://localhost:8000')
+API_URL = os.getenv('API_URL', 'http://fastapi:8000')
 
 # Función para crear un nuevo producto
 def crear_producto():
